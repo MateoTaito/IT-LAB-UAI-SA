@@ -6,6 +6,10 @@ export interface CreateRoleDTO {
     Description?: string;
 }
 
+export interface DeleteRoleDTO {
+    Name: string;
+}
+
 export const createRole = async (req: Request, res: Response) => {
     try {
         const roleData: CreateRoleDTO = req.body;
@@ -38,12 +42,12 @@ export const listRoles = async (req: Request, res: Response) => {
 
 export const deleteRoleByName = async (req: Request, res: Response) => {
     try {
-        const { name } = req.body;
-        if (!name) {
-            return res.status(400).json({ error: "Role name is required" });
+        const roleData: DeleteRoleDTO = req.body;
+        if (!roleData.Name) {
+            return res.status(400).json({ error: "Role Name is required" });
         }
 
-        const role = await Role.findOne({ where: { Name: name } });
+        const role = await Role.findOne({ where: { Name: roleData.Name } });
         if (!role) {
             return res.status(404).json({ error: "Role not found" });
         }

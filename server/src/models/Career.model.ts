@@ -1,14 +1,11 @@
-import { Table, Column, Model, PrimaryKey, AutoIncrement, DataType, ForeignKey, BelongsTo, BelongsToMany } from "sequelize-typescript";
+import { Table, Column, Model, PrimaryKey, AutoIncrement, DataType, BelongsToMany } from "sequelize-typescript";
 import User from "./User.model";
-import UserCareer from "./UserCareer.model"
+import UserCareer from "./UserCareer.model";
 
 @Table({
     tableName: "Career",
 })
-
 class Career extends Model {
-
-
     @PrimaryKey
     @AutoIncrement
     @Column({
@@ -16,7 +13,12 @@ class Career extends Model {
     })
     declare Id: number;
 
-
+    @Column({
+        type: DataType.STRING,
+        allowNull: false,
+        unique: true
+    })
+    declare Name: string;
 
     @Column({
         type: DataType.STRING
@@ -25,6 +27,6 @@ class Career extends Model {
 
     @BelongsToMany(() => User, () => UserCareer)
     declare Users: User[];
-
 }
-export default Career
+
+export default Career;
