@@ -119,6 +119,9 @@ export const deleteUserByEmail = async (req: Request, res: Response) => {
         // Unbind all roles from the user
         await UserRole.destroy({ where: { UserId: user.Id } });
 
+        // Unbind all careers from the user
+        await UserCareer.destroy({ where: { UserId: user.Id } });
+
         // Check if user is an admin
         const admin = await Admin.findOne({ where: { UserId: user.Id } });
         if (admin) {
