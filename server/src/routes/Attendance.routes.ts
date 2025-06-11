@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { checkIn, listActiveUsers, listInactiveUsers, listAllUsersAttendance, checkOut } from "../controllers/Attendance.controller";
 import { jwtAuth } from "../middleware/jwtAuth.middleware";
+import { forceAttendanceAutoCheckout } from "../scheduler/attendanceAutoCheckout";
 
 const router: Router = Router();
 
@@ -22,6 +23,11 @@ router.get("/list-inactive-users", jwtAuth, (req: Request, res: Response) => {
 
 router.get("/list-all-users", jwtAuth, (req: Request, res: Response) => {
     listAllUsersAttendance(req, res);
+});
+
+router.post("/force-auto-checkout", async (req: Request, res: Response) => {
+    await forceAttendanceAutoCheckout();
+    res.status(200).json({ message: "Force auto-checkout executed." });
 });
 
 export default router;

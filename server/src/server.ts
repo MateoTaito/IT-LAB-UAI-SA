@@ -7,6 +7,7 @@ import rolesRouter from "./routes/Roles.routes";
 import careersRouter from "./routes/Careers.routes";
 import reasonsRouter from "./routes/Reasons.routes";
 import attendanceRoutes from "./routes/Attendance.routes";
+import { startAttendanceAutoCheckout } from "./scheduler/attendanceAutoCheckout";
 
 // Define Conection to the Data Base
 async function connectDB() {
@@ -20,6 +21,9 @@ async function connectDB() {
 
 // Establishing Conection
 connectDB();
+
+// Start scheduled attendance auto-checkout
+startAttendanceAutoCheckout();
 
 // Setting Up the Server
 const server = express();
