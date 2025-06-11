@@ -6,6 +6,7 @@ import loginRouter from "./routes/Login.routes";
 import rolesRouter from "./routes/Roles.routes";
 import careersRouter from "./routes/Careers.routes";
 import reasonsRouter from "./routes/Reasons.routes";
+import attendanceRoutes from "./routes/Attendance.routes";
 
 // Define Conection to the Data Base
 async function connectDB() {
@@ -31,5 +32,6 @@ server.use("/api/login", loginRouter);
 server.use("/api/roles", rolesRouter);
 server.use("/api/careers", careersRouter);
 server.use("/api/reasons", reasonsRouter);
+server.use("/api/attendance", attendanceRoutes);
 
 export default server;
