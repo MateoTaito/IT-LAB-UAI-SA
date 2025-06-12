@@ -59,7 +59,12 @@ const delayClasses = ["card-gradient-cascade-0", "card-gradient-cascade-1", "car
 
 export default function OngoingProjects() {
 	return (
-		<section className="w-full flex flex-col items-center justify-center py-20 bg-white bg-opacity-90">
+		<section
+			className="w-full min-h-screen flex flex-col items-center justify-center py-20"
+			style={{
+				background: "linear-gradient(135deg, #f3f4f6 0%, #e0e7ff 100%)",
+			}}
+		>
 			<div className="max-w-6xl w-full px-4">
 				<p className="text-center font-semibold text-lg mb-2 text-gray-700">Innovate</p>
 				<h2 className="text-3xl md:text-5xl font-extrabold text-center mb-4 text-gray-900">

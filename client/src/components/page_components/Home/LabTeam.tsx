@@ -38,7 +38,13 @@ const professors = [
 
 export default function LabTeam() {
 	return (
-		<section id="lab-team" className="w-full flex flex-col items-center justify-center py-20 bg-[#18122B]">
+		<section
+			id="lab-team"
+			className="w-full min-h-screen flex flex-col items-center justify-center py-20"
+			style={{
+				background: "#18122B",
+			}}
+		>
 			<div className="max-w-6xl w-full px-4">
 				<h2 className="text-3xl md:text-5xl font-extrabold text-center mb-4 text-white">Meet the Lab Team</h2>
 				<p className="text-center text-gray-300 mb-12">
