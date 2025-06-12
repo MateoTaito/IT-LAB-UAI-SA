@@ -7,12 +7,14 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 //import About from "./components/pages/About";
 //import Login from "./components/pages/Login";
 import Home from "./components/page_templates/Home";
+import Login from "./components/page_templates/Login";
 
 function App() {
 	return (
 		<BrowserRouter>
 			<Routes>
 				<Route path="/" element={<Home />} />
+				<Route path="/login" element={<Login />} />
 			</Routes>
 		</BrowserRouter>
 	);
