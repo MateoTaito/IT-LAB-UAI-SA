@@ -1,36 +1,22 @@
 import React, { useState } from "react";
-
-interface UserFormData {
-	Name: string;
-	LastName: string;
-	Email: string;
-	Password: string;
-	Role?: string;
-}
+import { User } from "../../../../api/UsersApi";
 
 interface UserModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onSubmit: (userData: UserFormData) => void;
+	onSubmit: (userData: any) => void; // Change to any to accommodate both partial and complete User
 	title: string;
-	initialData?: Partial<UserFormData>;
+	initialData?: User;
 	isEdit?: boolean;
 }
 
-export default function UserModal({
-	isOpen,
-	onClose,
-	onSubmit,
-	title,
-	initialData = {},
-	isEdit = false,
-}: UserModalProps) {
-	const [formData, setFormData] = useState<UserFormData>({
-		Name: initialData.Name || "",
-		LastName: initialData.LastName || "",
-		Email: initialData.Email || "",
-		Password: initialData.Password || "",
-		Role: initialData.Role || "User",
+export default function UserModal({ isOpen, onClose, onSubmit, title, initialData, isEdit = false }: UserModalProps) {
+	const [formData, setFormData] = useState<Partial<User>>({
+		Rut: initialData?.Rut || "",
+		Email: initialData?.Email || "",
+		Name: initialData?.Name || "",
+		LastName: initialData?.LastName || "",
+		Status: initialData?.Status || "active",
 	});
 
 	const [errors, setErrors] = useState<Record<string, string>>({});
@@ -56,24 +42,22 @@ export default function UserModal({
 	const validate = (): boolean => {
 		const newErrors: Record<string, string> = {};
 
-		if (!formData.Name.trim()) {
-			newErrors.Name = "Name is required";
+		if (!formData.Rut?.trim()) {
+			newErrors.Rut = "RUT is required";
 		}
 
-		if (!formData.LastName.trim()) {
-			newErrors.LastName = "Last name is required";
-		}
-
-		if (!formData.Email.trim()) {
+		if (!formData.Email?.trim()) {
 			newErrors.Email = "Email is required";
 		} else if (!/\S+@\S+\.\S+/.test(formData.Email)) {
 			newErrors.Email = "Email is invalid";
 		}
 
-		if (!isEdit && !formData.Password.trim()) {
-			newErrors.Password = "Password is required";
-		} else if (!isEdit && formData.Password.length < 8) {
-			newErrors.Password = "Password must be at least 8 characters";
+		if (!formData.Name?.trim()) {
+			newErrors.Name = "Name is required";
+		}
+
+		if (!formData.LastName?.trim()) {
+			newErrors.LastName = "Last name is required";
 		}
 
 		setErrors(newErrors);
@@ -84,7 +68,15 @@ export default function UserModal({
 		e.preventDefault();
 
 		if (validate()) {
-			onSubmit(formData);
+			// Rename LastName to Lastname for create user API if needed
+			if (!isEdit && formData.LastName) {
+				onSubmit({
+					...formData,
+					LastName: formData.LastName,
+				});
+			} else {
+				onSubmit(formData);
+			}
 		}
 	};
 
@@ -95,14 +87,52 @@ export default function UserModal({
 
 				<form onSubmit={handleSubmit}>
 					<div className="space-y-4">
+						{/* Rut Field */}
+						<div>
+							<label htmlFor="Rut" className="block text-sm font-medium text-gray-700 mb-1">
+								RUT
+							</label>
+							<input
+								type="text"
+								id="Rut"
+								name="Rut"
+								value={formData.Rut}
+								onChange={handleChange}
+								className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+									errors.Rut ? "border-red-500" : ""
+								}`}
+								placeholder="12345678-9"
+							/>
+							{errors.Rut && <p className="mt-1 text-xs text-red-600">{errors.Rut}</p>}
+						</div>
+
+						{/* Email Field */}
+						<div>
+							<label htmlFor="Email" className="block text-sm font-medium text-gray-700 mb-1">
+								Email
+							</label>
+							<input
+								type="email"
+								id="Email"
+								name="Email"
+								value={formData.Email}
+								onChange={handleChange}
+								className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+									errors.Email ? "border-red-500" : ""
+								}`}
+								placeholder="user@example.com"
+							/>
+							{errors.Email && <p className="mt-1 text-xs text-red-600">{errors.Email}</p>}
+						</div>
+
 						{/* Name Field */}
 						<div>
-							<label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+							<label htmlFor="Name" className="block text-sm font-medium text-gray-700 mb-1">
 								Name
 							</label>
 							<input
 								type="text"
-								id="name"
+								id="Name"
 								name="Name"
 								value={formData.Name}
 								onChange={handleChange}
@@ -115,12 +145,12 @@ export default function UserModal({
 
 						{/* Last Name Field */}
 						<div>
-							<label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+							<label htmlFor="LastName" className="block text-sm font-medium text-gray-700 mb-1">
 								Last Name
 							</label>
 							<input
 								type="text"
-								id="lastName"
+								id="LastName"
 								name="LastName"
 								value={formData.LastName}
 								onChange={handleChange}
@@ -131,62 +161,24 @@ export default function UserModal({
 							{errors.LastName && <p className="mt-1 text-xs text-red-600">{errors.LastName}</p>}
 						</div>
 
-						{/* Email Field */}
-						<div>
-							<label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-								Email
-							</label>
-							<input
-								type="email"
-								id="email"
-								name="Email"
-								value={formData.Email}
-								onChange={handleChange}
-								className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-									errors.Email ? "border-red-500" : ""
-								}`}
-							/>
-							{errors.Email && <p className="mt-1 text-xs text-red-600">{errors.Email}</p>}
-						</div>
-
-						{/* Password Field - only show for new users */}
-						{!isEdit && (
+						{/* Status Field - only shown for edit mode */}
+						{isEdit && (
 							<div>
-								<label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-									Password
+								<label htmlFor="Status" className="block text-sm font-medium text-gray-700 mb-1">
+									Status
 								</label>
-								<input
-									type="password"
-									id="password"
-									name="Password"
-									value={formData.Password}
+								<select
+									id="Status"
+									name="Status"
+									value={formData.Status}
 									onChange={handleChange}
-									className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-										errors.Password ? "border-red-500" : ""
-									}`}
-								/>
-								{errors.Password && <p className="mt-1 text-xs text-red-600">{errors.Password}</p>}
+									className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+								>
+									<option value="active">Active</option>
+									<option value="inactive">Inactive</option>
+								</select>
 							</div>
 						)}
-
-						{/* Role Field */}
-						<div>
-							<label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-								Role
-							</label>
-							<select
-								id="role"
-								name="Role"
-								value={formData.Role}
-								onChange={handleChange}
-								className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-							>
-								<option value="User">User</option>
-								<option value="Admin">Admin</option>
-								<option value="Professor">Professor</option>
-								<option value="Student">Student</option>
-							</select>
-						</div>
 					</div>
 
 					{/* Form Actions */}

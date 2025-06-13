@@ -1,16 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { createUser, listUsers, deleteUser } from "../../../../api/UsersApi";
+import { listUsers, createUser, deleteUser, updateUserStatus, User } from "../../../../api/UsersApi";
 import UserModal from "./UserModal";
-
-// Update the User interface to include Status property
-interface User {
-	Id: string;
-	Name: string;
-	LastName: string;
-	Email: string;
-	Role?: string;
-	Status: string; // Make Status required since we'll always have a value for it
-}
 
 export default function UsersManagement() {
 	const [users, setUsers] = useState<User[]>([]);
@@ -30,12 +20,7 @@ export default function UsersManagement() {
 		try {
 			setLoading(true);
 			const fetchedUsers = await listUsers();
-			// Add a default status if it's missing
-			const usersWithStatus = fetchedUsers.map((user) => ({
-				...user,
-				Status: user.Status || "Active",
-			}));
-			setUsers(usersWithStatus);
+			setUsers(fetchedUsers);
 			setError(null);
 		} catch (err) {
 			console.error("Error fetching users:", err);
@@ -50,23 +35,49 @@ export default function UsersManagement() {
 		(user) =>
 			user.Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			user.LastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			user.Email.toLowerCase().includes(searchTerm.toLowerCase())
+			user.Email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			user.Rut.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
 	// Add new user
-	const handleAddUser = async (userData: any) => {
+	const handleAddUser = async (userData: Partial<User>) => {
 		try {
 			setLoading(true);
-			await createUser(userData);
 
-			// Refresh the user list
+			// Structure payload to match API expectations
+			const newUser = {
+				Rut: userData.Rut || "",
+				Email: userData.Email || "",
+				Name: userData.Name || "",
+				Lastname: userData.LastName || "", // Note: API expects Lastname not LastName
+			};
+
+			await createUser(newUser);
 			await fetchUsers();
-
-			// Close the modal
 			setShowAddModal(false);
 		} catch (err: any) {
 			console.error("Error creating user:", err);
 			setError(err.response?.data?.error || "Failed to create user. Please try again.");
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	// Update user status - Modified to accept partial user data
+	const handleUpdateUser = async (userData: any) => {
+		try {
+			setLoading(true);
+
+			if (currentUser && userData.Status && userData.Status !== currentUser.Status) {
+				await updateUserStatus(userData.Email, userData.Status as "active" | "inactive");
+			}
+
+			await fetchUsers();
+			setShowEditModal(false);
+			setCurrentUser(null);
+		} catch (err: any) {
+			console.error("Error updating user:", err);
+			setError(err.response?.data?.error || "Failed to update user. Please try again.");
 		} finally {
 			setLoading(false);
 		}
@@ -78,8 +89,6 @@ export default function UsersManagement() {
 			try {
 				setLoading(true);
 				await deleteUser(email);
-
-				// Refresh the user list
 				await fetchUsers();
 			} catch (err: any) {
 				console.error("Error deleting user:", err);
@@ -94,6 +103,21 @@ export default function UsersManagement() {
 	const handleEditClick = (user: User) => {
 		setCurrentUser(user);
 		setShowEditModal(true);
+	};
+
+	// Toggle user status
+	const toggleUserStatus = async (email: string, currentStatus: string) => {
+		const newStatus = currentStatus === "active" ? "inactive" : "active";
+		try {
+			setLoading(true);
+			await updateUserStatus(email, newStatus as "active" | "inactive");
+			await fetchUsers();
+		} catch (err: any) {
+			console.error("Error toggling user status:", err);
+			setError(err.response?.data?.error || "Failed to update user status. Please try again.");
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	return (
@@ -135,7 +159,7 @@ export default function UsersManagement() {
 						<input
 							type="text"
 							className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-							placeholder="Search users..."
+							placeholder="Search users by name, email, or RUT..."
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
 						/>
@@ -165,19 +189,25 @@ export default function UsersManagement() {
 										scope="col"
 										className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
 									>
+										RUT
+									</th>
+									<th
+										scope="col"
+										className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+									>
 										Email
 									</th>
 									<th
 										scope="col"
 										className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
 									>
-										Role
+										Status
 									</th>
 									<th
 										scope="col"
 										className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
 									>
-										Status
+										Roles
 									</th>
 									<th
 										scope="col"
@@ -196,29 +226,36 @@ export default function UsersManagement() {
 											</div>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
+											<div className="text-sm text-gray-500">{user.Rut}</div>
+										</td>
+										<td className="px-6 py-4 whitespace-nowrap">
 											<div className="text-sm text-gray-500">{user.Email}</div>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<span
 												className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        ${
-							user.Role === "Admin"
-								? "bg-purple-100 text-purple-800"
-								: user.Role === "Professor"
-								? "bg-blue-100 text-blue-800"
-								: "bg-green-100 text-green-800"
-						}`}
-											>
-												{user.Role || "User"}
-											</span>
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap">
-											<span
-												className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        ${user.Status === "Active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+												${user.Status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
 											>
 												{user.Status}
 											</span>
+										</td>
+										<td className="px-6 py-4 whitespace-nowrap">
+											<div className="flex flex-wrap gap-1">
+												{user.Roles && user.Roles.length > 0 ? (
+													<>
+														{user.Roles.map((role, idx) => (
+															<span
+																key={idx}
+																className="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full"
+															>
+																{role}
+															</span>
+														))}
+													</>
+												) : (
+													<span className="text-sm text-gray-500">No roles</span>
+												)}
+											</div>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
 											<button
@@ -226,6 +263,13 @@ export default function UsersManagement() {
 												className="text-indigo-600 hover:text-indigo-900 mr-3"
 											>
 												Edit
+											</button>
+											<button
+												onClick={() => toggleUserStatus(user.Email, user.Status)}
+												className={`text-yellow-600 hover:text-yellow-900 mr-3`}
+												title={user.Status === "active" ? "Deactivate user" : "Activate user"}
+											>
+												{user.Status === "active" ? "Deactivate" : "Activate"}
 											</button>
 											<button
 												onClick={() => handleDeleteUser(user.Email)}
@@ -259,7 +303,7 @@ export default function UsersManagement() {
 				/>
 			)}
 
-			{/* Edit User Modal */}
+			{/* Edit User Modal - Updated to handle the complete User object */}
 			{showEditModal && currentUser && (
 				<UserModal
 					isOpen={showEditModal}
@@ -267,13 +311,10 @@ export default function UsersManagement() {
 						setShowEditModal(false);
 						setCurrentUser(null);
 					}}
-					onSubmit={(userData) => {
-						console.log("Edit user functionality not yet implemented", userData);
-						setShowEditModal(false);
-					}}
+					onSubmit={(userData) => handleUpdateUser({ ...currentUser, ...userData })}
 					title="Edit User"
 					initialData={currentUser}
-					isEdit
+					isEdit={true}
 				/>
 			)}
 		</div>

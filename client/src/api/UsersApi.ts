@@ -1,21 +1,133 @@
 import API_Users from "../lib/AxiosUsers";
 
 export interface User {
-    Id: string;
+    Id: number | string;
+    Rut: string;
+    Email: string;
     Name: string;
     LastName: string;
-    Email: string;
-    Role?: string;
-    Status?: string; // Add Status property (optional in API response)
+    Status: string;
+    createdAt?: string;
+    updatedAt?: string;
+    Roles?: string[];
+    Careers?: string[];
 }
 
-export interface CreateUserDTO {
-    Name: string;
-    LastName: string;
-    Email: string;
-    Password?: string;
+/**
+ * Create a new user
+ * 
+ * @param userData Object containing user details
+ * @returns The created user
+ */
+export async function createUser(userData: { Rut: string; Email: string; Name: string; Lastname: string }): Promise<User> {
+    try {
+        const response = await API_Users.post('/create-user', userData);
+        return response.data;
+    } catch (error) {
+        console.error("Failed to create user:", error);
+        throw error;
+    }
 }
 
+/**
+ * Get a list of all users
+ * 
+ * @returns Array of users with their roles
+ */
+export async function listUsers(): Promise<User[]> {
+    try {
+        const response = await API_Users.get('/list-users');
+        return response.data;
+    } catch (error) {
+        console.error("Failed to fetch users:", error);
+        throw error;
+    }
+}
+
+/**
+ * Delete a user by email
+ * 
+ * @param email Email of the user to delete
+ * @returns Success message
+ */
+export async function deleteUser(email: string): Promise<{ message: string }> {
+    try {
+        const response = await API_Users.delete('/delete-user', {
+            data: { Email: email }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Failed to delete user:", error);
+        throw error;
+    }
+}
+
+/**
+ * Assign a role to a user
+ * 
+ * @param email User's email
+ * @param role Role to assign
+ * @returns Success message
+ */
+export async function assignRoleToUser(email: string, role: string): Promise<{ message: string }> {
+    try {
+        const response = await API_Users.post('/assign-role', {
+            Email: email,
+            Role: role
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Failed to assign role to user:", error);
+        throw error;
+    }
+}
+
+/**
+ * Get users by role
+ * 
+ * @param role Role to filter users by
+ * @returns Array of users with the specified role
+ */
+export async function getUsersByRole(role: string): Promise<User[]> {
+    try {
+        const response = await API_Users.post('/get-users-by-role', {
+            Role: role
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Failed to fetch users by role:", error);
+        throw error;
+    }
+}
+
+/**
+ * Remove a role from a user
+ * 
+ * @param email User's email
+ * @param role Role to remove
+ * @returns Success message
+ */
+export async function deleteUserRole(email: string, role: string): Promise<{ message: string }> {
+    try {
+        const response = await API_Users.delete('/delete-user-role', {
+            data: {
+                Email: email,
+                Role: role
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Failed to remove role from user:", error);
+        throw error;
+    }
+}
+
+/**
+ * Get user information by ID
+ * 
+ * @param userId ID of the user to fetch
+ * @returns User information including roles and careers
+ */
 export async function getAdminInfo(userId: string): Promise<User> {
     try {
         const response = await API_Users.get(`/${userId}`);
@@ -26,40 +138,82 @@ export async function getAdminInfo(userId: string): Promise<User> {
     }
 }
 
-export async function createUser(userData: CreateUserDTO): Promise<User> {
+/**
+ * Update user status
+ * 
+ * @param email User's email
+ * @param status New status ('active' or 'inactive')
+ * @returns Success message and updated status
+ */
+export async function updateUserStatus(email: string, status: 'active' | 'inactive'): Promise<{ message: string; status: string }> {
     try {
-        const response = await API_Users.post('/create-user', userData);
+        const response = await API_Users.put('/update-status', {
+            Email: email,
+            Status: status
+        });
         return response.data;
     } catch (error) {
-        console.error("Failed to create user:", error);
+        console.error("Failed to update user status:", error);
         throw error;
     }
 }
 
-export async function listUsers(): Promise<User[]> {
+/**
+ * Assign a career to a user
+ * 
+ * @param email User's email
+ * @param career Career to assign
+ * @returns Success message
+ */
+export async function assignCareerToUser(email: string, career: string): Promise<{ message: string }> {
     try {
-        const response = await API_Users.get('/list-users');
+        const response = await API_Users.post('/assign-career', {
+            Email: email,
+            Career: career
+        });
         return response.data;
     } catch (error) {
-        console.error("Failed to fetch users list:", error);
+        console.error("Failed to assign career to user:", error);
         throw error;
     }
 }
 
-export async function deleteUser(email: string): Promise<void> {
+/**
+ * Get users by career
+ * 
+ * @param career Career to filter users by
+ * @returns Array of users with the specified career
+ */
+export async function getUsersByCareer(career: string): Promise<User[]> {
     try {
-        await API_Users.delete('/delete-user', { data: { Email: email } });
+        const response = await API_Users.post('/get-users-by-career', {
+            Career: career
+        });
+        return response.data;
     } catch (error) {
-        console.error("Failed to delete user:", error);
+        console.error("Failed to fetch users by career:", error);
         throw error;
     }
 }
 
-export async function assignRole(email: string, roleName: string): Promise<void> {
+/**
+ * Remove a career from a user
+ * 
+ * @param email User's email
+ * @param career Career to remove
+ * @returns Success message
+ */
+export async function deleteUserCareer(email: string, career: string): Promise<{ message: string }> {
     try {
-        await API_Users.post('/assign-role', { Email: email, RoleName: roleName });
+        const response = await API_Users.delete('/delete-user-career', {
+            data: {
+                Email: email,
+                Career: career
+            }
+        });
+        return response.data;
     } catch (error) {
-        console.error("Failed to assign role to user:", error);
+        console.error("Failed to remove career from user:", error);
         throw error;
     }
 }
