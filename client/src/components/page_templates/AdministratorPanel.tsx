@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Routes, Route, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getAdminInfo, User } from "../../api/UsersApi";
+import { useSidebar } from "../../context/SidebarContext";
 
 // Import components
+import Sidebar from "../page_components/AdministratorPanel/Sidebar";
 import Header from "../page_components/AdministratorPanel/Header";
+import DashboardContent from "../page_components/AdministratorPanel/Dashboard/DashboardContent";
+import UsersManagement from "../page_components/AdministratorPanel/Users/UsersManagement";
+import RolesManagement from "../page_components/AdministratorPanel/Roles/RolesManagement";
 
 export default function AdministratorPanel() {
-	const { isAuthenticated, userId } = useAuth();
+	const { isAuthenticated, adminId, userId } = useAuth();
+	const { collapsed } = useSidebar();
 	const navigate = useNavigate();
+	const location = useLocation();
 	const [userInfo, setUserInfo] = useState<User | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
@@ -71,17 +78,27 @@ export default function AdministratorPanel() {
 	const email = userInfo ? userInfo.Email : "";
 
 	return (
-		<div className="min-h-screen bg-gray-100">
-			{/* Admin Header */}
-			<Header userName={fullName} userEmail={email} />
+		<div className="flex h-screen bg-gray-100">
+			{/* Sidebar with user info passed in */}
+			<Sidebar userName={fullName} userEmail={email} />
 
-			{/* Main content will go here */}
-			<main className="max-w-7xl mx-auto px-4 py-8">
-				<div className="bg-white p-6 rounded-lg shadow">
-					<h2 className="text-xl font-semibold mb-4">Welcome to the Administrator Dashboard</h2>
-					<p>This dashboard is currently under development. More features will be added soon.</p>
-				</div>
-			</main>
+			{/* Main Content */}
+			<div className={`flex-1 flex flex-col ${collapsed ? "ml-24" : "ml-64"} transition-all duration-300`}>
+				{/* Admin Header */}
+				<Header />
+
+				{/* Page Content - Now uses Routes */}
+				<main className="flex-1 overflow-y-auto p-6">
+					<div className="max-w-7xl mx-auto">
+						<Routes>
+							<Route path="/" element={<DashboardContent />} />
+							<Route path="/users" element={<UsersManagement />} />
+							<Route path="/roles" element={<RolesManagement />} />
+							<Route path="*" element={<DashboardContent />} />
+						</Routes>
+					</div>
+				</main>
+			</div>
 		</div>
 	);
 }

@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import Role from "../models/Role.model";
+import User from "../models/User.model";
+import { col, fn } from "sequelize";
 
 export interface CreateRoleDTO {
     Name: string;
@@ -8,6 +10,12 @@ export interface CreateRoleDTO {
 
 export interface DeleteRoleDTO {
     Name: string;
+}
+
+export interface UpdateRoleDTO {
+    CurrentName: string;
+    NewName?: string;
+    Description?: string;
 }
 
 export const createRole = async (req: Request, res: Response) => {
@@ -33,7 +41,26 @@ export const createRole = async (req: Request, res: Response) => {
 
 export const listRoles = async (req: Request, res: Response) => {
     try {
-        const roles = await Role.findAll();
+        const roles = await Role.findAll({
+            include: [
+                {
+                    model: User,
+                    attributes: [],
+                    through: { attributes: [] }
+                }
+            ],
+            attributes: [
+                'Id',
+                'Name',
+                'Description',
+                'createdAt',
+                'updatedAt',
+                [fn('COUNT', col('Users.Id')), 'UserCount']
+            ],
+            group: ['Role.Id'],
+            raw: true
+        });
+
         res.status(200).json(roles);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch roles", details: error });
@@ -56,5 +83,39 @@ export const deleteRoleByName = async (req: Request, res: Response) => {
         res.status(200).json({ message: "Role deleted successfully" });
     } catch (error) {
         res.status(500).json({ error: "Failed to delete role", details: error });
+    }
+};
+
+export const updateRole = async (req: Request, res: Response) => {
+    try {
+        const roleData: UpdateRoleDTO = req.body;
+        if (!roleData.CurrentName) {
+            return res.status(400).json({ error: "Current Role Name is required" });
+        }
+
+        // Check if role exists
+        const role = await Role.findOne({ where: { Name: roleData.CurrentName } });
+        if (!role) {
+            return res.status(404).json({ error: "Role not found" });
+        }
+
+        // Check if new name already exists (if name is being updated)
+        if (roleData.NewName && roleData.NewName !== roleData.CurrentName) {
+            const existingRole = await Role.findOne({ where: { Name: roleData.NewName } });
+            if (existingRole) {
+                return res.status(409).json({ error: "Role with this name already exists" });
+            }
+            role.Name = roleData.NewName;
+        }
+
+        // Update description if provided
+        if (roleData.Description !== undefined) {
+            role.Description = roleData.Description;
+        }
+
+        await role.save();
+        res.status(200).json({ message: "Role updated successfully", role });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to update role", details: error });
     }
 };

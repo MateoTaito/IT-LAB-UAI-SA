@@ -1,5 +1,7 @@
 import User from "../models/User.model";
 import Admin from "../models/Admin.model";
+import Role from "../models/Role.model";
+import UserRole from "../models/UserRole.model";
 import { hashString } from "./hash.util";
 
 export async function seedDefaultAdmin() {
@@ -25,7 +27,22 @@ export async function seedDefaultAdmin() {
             Password: await hashString("admin123")
         });
 
-        console.log("Default admin created successfully");
+        // Create or get admin role
+        let adminRole = await Role.findOne({ where: { Name: "Administrator" } });
+        if (!adminRole) {
+            adminRole = await Role.create({
+                Name: "Administrator",
+                Description: "System administrator with full privileges"
+            });
+        }
+
+        // Assign admin role to the default admin user
+        await UserRole.create({
+            UserId: defaultUser.Id,
+            RoleId: adminRole.Id
+        });
+
+        console.log("Default admin created successfully with Administrator role");
     } catch (error) {
         console.error("Error seeding default admin:", error);
     }
