@@ -1,20 +1,56 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../page_components/Navbar/Navbar";
 import LoginBox from "../page_components/Login/LoginBox";
+import { loginAdmin } from "../../api/LoginApi";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Login() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
+	const [loading, setLoading] = useState(false);
+	const navigate = useNavigate();
+	const { login } = useAuth();
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!email || !password) {
 			setError("Please enter both email and password.");
 			return;
 		}
 		setError("");
-		alert("Login submitted! (Implement your logic here)");
+		setLoading(true);
+
+		// Create payload and log it
+		const payload = { Email: email, Password: password };
+		console.log("Login request payload:", payload);
+
+		try {
+			const res = await loginAdmin(payload);
+			// Log the successful response
+			console.log("Login success - Response:", res);
+			console.log("Token received:", res.token);
+			console.log("User data:", {
+				adminId: res.adminId,
+				userId: res.userId,
+			});
+
+			// Store authentication data using the context
+			login(res.token, res.userId, res.adminId);
+
+			// Redirect to admin dashboard after successful login
+			navigate("/admin");
+		} catch (err: any) {
+			// Log the error response
+			console.error("Login error:", err);
+			console.error("Response data:", err?.response?.data);
+			console.error("Status code:", err?.response?.status);
+
+			setError(err?.response?.data?.error || "Login failed. Please try again.");
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	return (

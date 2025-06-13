@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function Navbar() {
 	const [menuOpen, setMenuOpen] = useState(false);
@@ -7,9 +8,14 @@ export default function Navbar() {
 	const [lastScrollY, setLastScrollY] = useState(0);
 	const location = useLocation();
 	const navigate = useNavigate();
+	const { isAuthenticated, logout } = useAuth();
 
 	const handleMore = () => {};
 	const handleMenuToggle = () => setMenuOpen((prev) => !prev);
+	const handleLogout = () => {
+		logout();
+		// No need to navigate as PrivateRoute will handle redirection
+	};
 
 	useEffect(() => {
 		const handleScroll = () => {
@@ -100,34 +106,58 @@ export default function Navbar() {
 						</button>
 						{/* Dropdown placeholder */}
 					</div>
-					{/* Right: Log In Button (on mobile, shown in menu) */}
+					{/* Right: Log In / Log Out Button (on mobile, shown in menu) */}
 					<div className="block lg:hidden mt-4">
+						{isAuthenticated ? (
+							<button
+								onClick={handleLogout}
+								className="px-5 py-2 border border-white text-white rounded-full font-medium hover:bg-white hover:text-gray-900 transition"
+								style={{
+									border: "none",
+								}}
+							>
+								Log Out
+							</button>
+						) : (
+							<button
+								onClick={() => {
+									setMenuOpen(false);
+									navigate("/login");
+								}}
+								className="px-5 py-2 border border-white text-white rounded-full font-medium hover:bg-white hover:text-gray-900 transition"
+								style={{
+									border: "none",
+								}}
+							>
+								Log In
+							</button>
+						)}
+					</div>
+				</div>
+
+				{/* Right: Log In / Log Out Button (desktop only) */}
+				<div className="hidden lg:flex items-center space-x-4">
+					{isAuthenticated ? (
 						<button
-							onClick={() => {
-								setMenuOpen(false);
-								navigate("/login");
+							onClick={handleLogout}
+							className="px-5 py-2 text-white rounded-full font-medium hover:bg-white hover:text-gray-900 transition"
+							style={{
+								border: "none",
 							}}
-							className="px-5 py-2 border border-white text-white rounded-full font-medium hover:bg-white hover:text-gray-900 transition"
+						>
+							Log Out
+						</button>
+					) : (
+						<button
+							onClick={() => navigate("/login")}
+							className="px-5 py-2 text-white rounded-full font-medium hover:bg-white hover:text-gray-900 transition"
 							style={{
 								border: "none",
 							}}
 						>
 							Log In
 						</button>
-					</div>
-				</div>
-
-				{/* Right: Log In Button (desktop only) */}
-				<div className="hidden lg:flex items-center space-x-4">
-					<button
-						onClick={() => navigate("/login")}
-						className="px-5 py-2 text-white rounded-full font-medium hover:bg-white hover:text-gray-900 transition"
-						style={{
-							border: "none",
-						}}
-					>
-						Log In
-					</button>
+					)}
 				</div>
 			</div>
 		</nav>
