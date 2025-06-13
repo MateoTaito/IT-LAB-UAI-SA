@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Home from "./components/page_templates/Home";
 import Login from "./components/page_templates/Login";
+import AdministratorPanel from "./components/page_templates/AdministratorPanel";
 import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/routes/PrivateRoute";
 
@@ -16,10 +17,9 @@ function App() {
 
 					{/* Protected routes */}
 					<Route element={<PrivateRoute />}>
-						{/* Example protected routes - replace with your actual admin pages */}
-						<Route path="/admin/*" element={<div>Admin Dashboard (Replace this)</div>} />
-						{/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
-						{/* <Route path="/admin/users" element={<AdminUsers />} /> */}
+						<Route path="/admin" element={<AdministratorPanel />} />
+						<Route path="/admin/dashboard" element={<AdministratorPanel />} />
+						{/* Add more admin routes here as needed */}
 					</Route>
 
 					{/* Fallback route */}

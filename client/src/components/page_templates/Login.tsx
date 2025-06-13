@@ -37,7 +37,8 @@ export default function Login() {
 			});
 
 			// Store authentication data using the context
-			login(res.token, res.userId, res.adminId);
+			// Pass the email as the fourth parameter
+			login(res.token, res.userId, res.adminId, email);
 
 			// Redirect to admin dashboard after successful login
 			navigate("/admin");

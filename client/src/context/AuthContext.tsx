@@ -5,11 +5,12 @@ interface AuthState {
 	token: string | null;
 	userId: string | null;
 	adminId: string | null;
+	userEmail: string | null;
 	loading: boolean;
 }
 
 interface AuthContextType extends AuthState {
-	login: (token: string, userId: string, adminId: string) => void;
+	login: (token: string, userId: string, adminId: string, email: string) => void;
 	logout: () => void;
 }
 
@@ -18,6 +19,7 @@ const initialAuthState: AuthState = {
 	token: null,
 	userId: null,
 	adminId: null,
+	userEmail: null,
 	loading: true,
 };
 
@@ -43,6 +45,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 		const token = localStorage.getItem("auth_token");
 		const userId = localStorage.getItem("auth_userId");
 		const adminId = localStorage.getItem("auth_adminId");
+		const userEmail = localStorage.getItem("auth_userEmail");
 
 		if (token && userId && adminId) {
 			setAuth({
@@ -50,6 +53,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 				token,
 				userId,
 				adminId,
+				userEmail,
 				loading: false,
 			});
 		} else {
@@ -57,11 +61,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 		}
 	}, []);
 
-	const login = (token: string, userId: string, adminId: string) => {
+	const login = (token: string, userId: string, adminId: string, email: string) => {
 		// Store auth data in localStorage
 		localStorage.setItem("auth_token", token);
 		localStorage.setItem("auth_userId", userId);
 		localStorage.setItem("auth_adminId", adminId);
+		localStorage.setItem("auth_userEmail", email);
 
 		// Update auth state
 		setAuth({
@@ -69,6 +74,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 			token,
 			userId,
 			adminId,
+			userEmail: email,
 			loading: false,
 		});
 	};
@@ -78,6 +84,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 		localStorage.removeItem("auth_token");
 		localStorage.removeItem("auth_userId");
 		localStorage.removeItem("auth_adminId");
+		localStorage.removeItem("auth_userEmail");
 
 		// Reset auth state
 		setAuth({
@@ -85,6 +92,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 			token: null,
 			userId: null,
 			adminId: null,
+			userEmail: null,
 			loading: false,
 		});
 	};

@@ -348,3 +348,45 @@ export const deleteUserCareer = async (req: Request, res: Response) => {
         res.status(500).json({ error: "Failed to unbind career from user", details: error });
     }
 };
+
+export const getUserById = async (req: Request, res: Response) => {
+    try {
+        const userId = req.params.id;
+
+        if (!userId) {
+            return res.status(400).json({ error: "User ID is required" });
+        }
+
+        const user = await User.findOne({
+            where: { Id: userId },
+            include: [
+                {
+                    model: Role,
+                    through: { attributes: [] },
+                    attributes: ["Name"]
+                },
+                {
+                    model: Career,
+                    through: { attributes: [] },
+                    attributes: ["Name"]
+                }
+            ]
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Format the response to include role and career names as arrays
+        const userObj = user.toJSON();
+        const formattedUser = {
+            ...userObj,
+            Roles: userObj.Roles ? userObj.Roles.map((role: any) => role.Name) : [],
+            Careers: userObj.Careers ? userObj.Careers.map((career: any) => career.Name) : []
+        };
+
+        res.status(200).json(formattedUser);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch user", details: error });
+    }
+};
