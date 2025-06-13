@@ -46,6 +46,11 @@ export interface DeleteUserCareerDTO {
     Career: string;
 }
 
+export interface UpdateUserStatusDTO {
+    Email: string;
+    Status: 'active' | 'inactive';
+}
+
 export const createUser = async (req: Request, res: Response) => {
     try {
         const userData: CreateUserDTO = req.body;
@@ -388,5 +393,30 @@ export const getUserById = async (req: Request, res: Response) => {
         res.status(200).json(formattedUser);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch user", details: error });
+    }
+};
+
+export const updateUserStatus = async (req: Request, res: Response) => {
+    try {
+        const userData: UpdateUserStatusDTO = req.body;
+        if (!userData.Email || !userData.Status) {
+            return res.status(400).json({ error: "Email and Status are required" });
+        }
+
+        if (userData.Status !== 'active' && userData.Status !== 'inactive') {
+            return res.status(400).json({ error: "Status must be either 'active' or 'inactive'" });
+        }
+
+        const user = await User.findOne({ where: { Email: userData.Email } });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        user.Status = userData.Status;
+        await user.save();
+
+        res.status(200).json({ message: "User status updated successfully", status: userData.Status });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to update user status", details: error });
     }
 };

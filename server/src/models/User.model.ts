@@ -44,6 +44,14 @@ class User extends Model {
     })
     declare LastName: string;
 
+    // Status of the User
+    @Column({
+        type: DataType.ENUM('active', 'inactive'),
+        allowNull: false,
+        defaultValue: 'active'
+    })
+    declare Status: string;
+
 
     @BelongsToMany(() => Role, () => UserRole)
     declare Roles: Role[];

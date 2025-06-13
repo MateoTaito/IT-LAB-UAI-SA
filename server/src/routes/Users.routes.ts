@@ -9,7 +9,8 @@ import {
     assignCareerToUser,
     getUsersByCareer,
     deleteUserCareer,
-    getUserById
+    getUserById,
+    updateUserStatus
 } from "../controllers/Users.Controller";
 import { jwtAuth } from "../middleware/jwtAuth.middleware";
 
@@ -54,6 +55,10 @@ router.delete("/delete-user-career", jwtAuth, (req: Request, res: Response) => {
 // Add the new route - this matches the frontend's /${userId} format
 router.get("/:id", jwtAuth, (req: Request, res: Response) => {
     getUserById(req, res);
+});
+
+router.put("/update-status", jwtAuth, (req: Request, res: Response) => {
+    updateUserStatus(req, res);
 });
 
 export default router;
