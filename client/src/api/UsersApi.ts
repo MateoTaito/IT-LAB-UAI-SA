@@ -1,4 +1,5 @@
 import API_Users from "../lib/AxiosUsers";
+import axios from "axios"; // Importar axios para el endpoint externo
 
 export interface User {
     Id: number | string;
@@ -21,8 +22,28 @@ export interface User {
  */
 export async function createUser(userData: { Rut: string; Email: string; Name: string; Lastname: string }): Promise<User> {
     try {
+        // Crear usuario en la API principal
         const response = await API_Users.post('/create-user', userData);
-        return response.data;
+        const createdUser = response.data;
+
+        // Hacer request al endpoint del lector de huellas
+        try {
+            const fingerprint_name = userData.Name + "_" + userData.Lastname;
+            await axios.post('http://localhost:5000/api/enrollment/user', {
+                // Adapta los datos según lo que espere la API del lector de huellas
+                username: fingerprint_name,
+                password: "password",
+                finger: "right-index-finger", // Aquí deberías enviar los datos de la huella digital
+                label: "Primary finger"
+                // Agrega cualquier otro campo que necesite el lector de huellas
+            });z
+            console.log("User successfully enrolled in fingerprint system");
+        } catch (fingerprintError) {
+            console.warn("Failed to enroll user in fingerprint system:", fingerprintError);
+            // Opcional: podrías decidir si fallar completamente o solo logear el warning
+        }
+
+        return createdUser;
     } catch (error) {
         console.error("Failed to create user:", error);
         throw error;
