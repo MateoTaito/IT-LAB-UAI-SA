@@ -1,5 +1,5 @@
 import API_Users from "../lib/AxiosUsers";
-import axios from "axios"; // Importar axios para el endpoint externo
+import API_Fingerprint from "../lib/AxiosFingerprint";
 
 export interface User {
     Id: number | string;
@@ -15,36 +15,69 @@ export interface User {
 }
 
 /**
- * Create a new user
+ * Expected response from fingerprint enrollment API
+ */
+export interface FingerprintEnrollmentResponse {
+    success: boolean;
+    message: string;
+    enrollmentId?: string;
+    templateData?: string;
+}
+
+/**
+ * Expected response from fingerprint deletion API
+ */
+export interface FingerprintDeletionResponse {
+    success: boolean;
+    message: string;
+}
+
+/**
+ * User creation progress states
+ */
+export enum UserCreationState {
+    IDLE = 'idle',
+    CREATING_USER = 'creating_user',
+    WAITING_FINGERPRINT = 'waiting_fingerprint',
+    ENROLLING_FINGERPRINT = 'enrolling_fingerprint',
+    SUCCESS = 'success',
+    ERROR = 'error'
+}
+
+/**
+ * Create a new user with fingerprint enrollment
  * 
  * @param userData Object containing user details
+ * @param onStateChange Callback to track creation progress
  * @returns The created user
  */
-export async function createUser(userData: { Rut: string; Email: string; Name: string; Lastname: string }): Promise<User> {
+export async function createUser(
+    userData: { Rut: string; Email: string; Name: string; Lastname: string },
+    onStateChange?: (state: UserCreationState, message?: string) => void
+): Promise<User> {
     try {
-        // Crear usuario en la API principal
+        // Step 1: Create user in database
+        onStateChange?.(UserCreationState.CREATING_USER, "Creating user account...");
         const response = await API_Users.post('/create-user', userData);
         const createdUser = response.data;
 
-        // Hacer request al endpoint del lector de huellas
-        try {
-            const fingerprint_name = userData.Name + "_" + userData.Lastname;
-            await axios.post('http://localhost:5000/api/enrollment/user', {
-                // Adapta los datos según lo que espere la API del lector de huellas
-                username: fingerprint_name,
-                password: "password",
-                finger: "right-index-finger", // Aquí deberías enviar los datos de la huella digital
-                label: "Primary finger"
-                // Agrega cualquier otro campo que necesite el lector de huellas
-            });z
-            console.log("User successfully enrolled in fingerprint system");
-        } catch (fingerprintError) {
-            console.warn("Failed to enroll user in fingerprint system:", fingerprintError);
-            // Opcional: podrías decidir si fallar completamente o solo logear el warning
-        }
+        // Step 2: Wait for external fingerprint verification
+        onStateChange?.(UserCreationState.WAITING_FINGERPRINT, "Please provide fingerprint for enrollment...");
+        
+        // Step 3: Enroll fingerprint
+        onStateChange?.(UserCreationState.ENROLLING_FINGERPRINT, "Enrolling fingerprint...");
+        const fingerprint_response = await API_Fingerprint.post('/enrollment/user', {
+            username: createdUser.Email,
+            password: "password",
+            finger: "right-index-finger",
+            label: "Primary finger"
+        });
 
+        // Step 4: Success
+        onStateChange?.(UserCreationState.SUCCESS, "User created and fingerprint enrolled successfully!");
         return createdUser;
     } catch (error) {
+        onStateChange?.(UserCreationState.ERROR, "Failed to create user or enroll fingerprint");
         console.error("Failed to create user:", error);
         throw error;
     }
@@ -75,6 +108,11 @@ export async function deleteUser(email: string): Promise<{ message: string }> {
     try {
         const response = await API_Users.delete('/delete-user', {
             data: { Email: email }
+        });
+        const fingerprint_response = await API_Fingerprint.delete(`/users/${email}`, {
+            data: {
+                username: email,
+            }
         });
         return response.data;
     } catch (error) {

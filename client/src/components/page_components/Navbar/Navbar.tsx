@@ -10,7 +10,7 @@ export default function Navbar() {
 	const navigate = useNavigate();
 	const { isAuthenticated, logout } = useAuth();
 
-	const handleMore = () => {};
+	const handleMore = () => { };
 	const handleMenuToggle = () => setMenuOpen((prev) => !prev);
 	const handleLogout = () => {
 		logout();
@@ -33,9 +33,8 @@ export default function Navbar() {
 
 	return (
 		<nav
-			className={`w-full fixed top-0 left-0 z-30 transition-transform duration-1000 ${
-				showNavbar ? "translate-y-0" : "-translate-y-full"
-			}`}
+			className={`w-full fixed top-0 left-0 z-30 transition-transform duration-1000 ${showNavbar ? "translate-y-0" : "-translate-y-full"
+				}`}
 			style={{
 				background: "linear-gradient(90deg, #1e1b4b 0%, #312e81 100%)",
 			}}
@@ -65,9 +64,8 @@ export default function Navbar() {
 				</div>
 				{/* Center: Navigation Links */}
 				<div
-					className={`flex-col lg:flex-row lg:flex items-center space-y-4 lg:space-y-0 lg:space-x-8 absolute lg:static top-full left-0 w-full lg:w-auto bg-transparent lg:bg-none px-6 lg:px-0 py-4 lg:py-0 transition-all duration-300 ${
-						menuOpen ? "flex" : "hidden lg:flex"
-					}`}
+					className={`flex-col lg:flex-row lg:flex items-center space-y-4 lg:space-y-0 lg:space-x-8 absolute lg:static top-full left-0 w-full lg:w-auto bg-transparent lg:bg-none px-6 lg:px-0 py-4 lg:py-0 transition-all duration-300 ${menuOpen ? "flex" : "hidden lg:flex"
+						}`}
 				>
 					<a
 						onClick={() => {
@@ -77,6 +75,15 @@ export default function Navbar() {
 						className="text-white hover:text-blue-200 font-medium cursor-pointer"
 					>
 						Home Page
+					</a>
+					<a
+						onClick={() => {
+							navigate("/verification");
+							setMenuOpen(false);
+						}}
+						className="text-white hover:text-blue-200 font-medium cursor-pointer"
+					>
+						Verification
 					</a>
 					<a
 						href="/about"

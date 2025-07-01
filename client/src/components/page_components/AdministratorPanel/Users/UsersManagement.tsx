@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { listUsers, createUser, deleteUser, updateUserStatus, User } from "../../../../api/UsersApi";
+import { listUsers, createUser, deleteUser, updateUserStatus, User, UserCreationState } from "../../../../api/UsersApi";
 import UserModal from "./UserModal";
 
 export default function UsersManagement() {
@@ -40,10 +40,8 @@ export default function UsersManagement() {
 	);
 
 	// Add new user
-	const handleAddUser = async (userData: Partial<User>) => {
+	const handleAddUser = async (userData: Partial<User>, onStateChange?: (state: UserCreationState, message?: string) => void): Promise<void> => {
 		try {
-			setLoading(true);
-
 			// Structure payload to match API expectations
 			const newUser = {
 				Rut: userData.Rut || "",
@@ -52,22 +50,19 @@ export default function UsersManagement() {
 				Lastname: userData.LastName || "", // Note: API expects Lastname not LastName
 			};
 
-			await createUser(newUser);
+			await createUser(newUser, onStateChange);
+
+			// Refresh the users list after successful creation
 			await fetchUsers();
-			setShowAddModal(false);
 		} catch (err: any) {
 			console.error("Error creating user:", err);
-			setError(err.response?.data?.error || "Failed to create user. Please try again.");
-		} finally {
-			setLoading(false);
+			throw err; // Re-throw to let modal handle the error
 		}
 	};
 
 	// Update user status - Modified to accept partial user data
-	const handleUpdateUser = async (userData: any) => {
+	const handleUpdateUser = async (userData: any): Promise<void> => {
 		try {
-			setLoading(true);
-
 			if (currentUser && userData.Status && userData.Status !== currentUser.Status) {
 				await updateUserStatus(userData.Email, userData.Status as "active" | "inactive");
 			}
@@ -77,9 +72,7 @@ export default function UsersManagement() {
 			setCurrentUser(null);
 		} catch (err: any) {
 			console.error("Error updating user:", err);
-			setError(err.response?.data?.error || "Failed to update user. Please try again.");
-		} finally {
-			setLoading(false);
+			throw err; // Re-throw to let modal handle the error
 		}
 	};
 
@@ -87,14 +80,11 @@ export default function UsersManagement() {
 	const handleDeleteUser = async (email: string) => {
 		if (window.confirm("Are you sure you want to delete this user?")) {
 			try {
-				setLoading(true);
 				await deleteUser(email);
 				await fetchUsers();
 			} catch (err: any) {
 				console.error("Error deleting user:", err);
 				setError(err.response?.data?.error || "Failed to delete user. Please try again.");
-			} finally {
-				setLoading(false);
 			}
 		}
 	};
@@ -109,14 +99,11 @@ export default function UsersManagement() {
 	const toggleUserStatus = async (email: string, currentStatus: string) => {
 		const newStatus = currentStatus === "active" ? "inactive" : "active";
 		try {
-			setLoading(true);
 			await updateUserStatus(email, newStatus as "active" | "inactive");
 			await fetchUsers();
 		} catch (err: any) {
 			console.error("Error toggling user status:", err);
 			setError(err.response?.data?.error || "Failed to update user status. Please try again.");
-		} finally {
-			setLoading(false);
 		}
 	};
 
@@ -132,7 +119,6 @@ export default function UsersManagement() {
 					<button
 						onClick={() => setShowAddModal(true)}
 						className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
-						disabled={loading}
 					>
 						Add User
 					</button>
@@ -274,7 +260,6 @@ export default function UsersManagement() {
 											<button
 												onClick={() => handleDeleteUser(user.Email)}
 												className="text-red-600 hover:text-red-900"
-												disabled={loading}
 											>
 												Delete
 											</button>

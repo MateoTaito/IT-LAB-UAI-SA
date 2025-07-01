@@ -12,6 +12,11 @@ router.delete("/delete-reason", jwtAuth, (req: Request, res: Response) => {
     deleteReasonByName(req, res);
 });
 
+// Public endpoint for verification (no auth required)
+router.get("/public-list-reasons", (req: Request, res: Response) => {
+    listReasons(req, res);
+});
+
 router.get("/list-reasons", jwtAuth, (req: Request, res: Response) => {
     listReasons(req, res);
 });

@@ -5,6 +5,15 @@ import { forceAttendanceAutoCheckout } from "../scheduler/attendanceAutoCheckout
 
 const router: Router = Router();
 
+// Public endpoints for verification (no auth required)
+router.post("/public-check-in", (req: Request, res: Response) => {
+    checkIn(req, res);
+});
+
+router.post("/public-check-out", (req: Request, res: Response) => {
+    checkOut(req, res);
+});
+
 router.post("/check-in-user", jwtAuth, (req: Request, res: Response) => {
     checkIn(req, res);
 });

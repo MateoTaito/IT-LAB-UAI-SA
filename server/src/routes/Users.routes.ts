@@ -57,7 +57,13 @@ router.get("/:id", jwtAuth, (req: Request, res: Response) => {
     getUserById(req, res);
 });
 
+// Protected route for updating user status
 router.put("/update-status", jwtAuth, (req: Request, res: Response) => {
+    updateUserStatus(req, res);
+});
+
+// Public endpoint for verification (no auth required)
+router.put("/public-update-status", (req: Request, res: Response) => {
     updateUserStatus(req, res);
 });
 
