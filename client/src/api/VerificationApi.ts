@@ -1,19 +1,19 @@
 import axios from 'axios';
 
 const API_Verification = axios.create({
-    baseURL: 'http://localhost:3001/api/users',
+    baseURL: 'http://localhost:3000/api/users',
 });
 
 const API_External_Verification = axios.create({
-    baseURL: 'http://localhost:5000/api',
+    baseURL: 'http://192.168.2.8:5000/api',  //raspberry ip
 });
 
 const API_Attendance_Public = axios.create({
-    baseURL: 'http://localhost:3001/api/attendance',
+    baseURL: 'http://localhost:3000/api/attendance',
 });
 
 const API_Reasons_Public = axios.create({
-    baseURL: 'http://localhost:3001/api/reasons',
+    baseURL: 'http://localhost:3000/api/reasons',
 });
 
 export interface UserCheckInDTO {
@@ -34,7 +34,7 @@ export interface Reason {
 }
 
 export const getVerificationUser = async () => {
-    const response = await API_External_Verification.get('/verification');
+    const response = await API_External_Verification.post('/verification');
     return response.data; // Should return { email: string }
 };
 

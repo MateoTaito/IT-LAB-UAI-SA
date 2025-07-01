@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_Reasons = axios.create({
-    baseURL: 'http://localhost:3001/api/reasons',
+    baseURL: 'http://localhost:3000/api/reasons',
 });
 
 // Add auth token to requests
