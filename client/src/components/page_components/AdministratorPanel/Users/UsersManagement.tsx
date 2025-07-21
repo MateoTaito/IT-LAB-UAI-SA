@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { listUsers, createUser, deleteUser, updateUserStatus, User, UserCreationState } from "../../../../api/UsersApi";
+import { listUsers, createUser, deleteUser, updateUserStatus, assignRoleToUser, User, UserCreationState } from "../../../../api/UsersApi";
 import UserModal from "./UserModal";
 
 export default function UsersManagement() {
@@ -40,7 +40,7 @@ export default function UsersManagement() {
 	);
 
 	// Add new user
-	const handleAddUser = async (userData: Partial<User>, onStateChange?: (state: UserCreationState, message?: string) => void): Promise<void> => {
+	const handleAddUser = async (userData: Partial<User> & { Role?: string }, onStateChange?: (state: UserCreationState, message?: string) => void): Promise<void> => {
 		try {
 			// Structure payload to match API expectations
 			const newUser = {
@@ -50,7 +50,18 @@ export default function UsersManagement() {
 				Lastname: userData.LastName || "", // Note: API expects Lastname not LastName
 			};
 
-			await createUser(newUser, onStateChange);
+			// First create the user
+			const createdUser = await createUser(newUser, onStateChange);
+
+			// After user creation, assign the role if provided
+			if (userData.Role && createdUser) {
+				try {
+					await assignRoleToUser(createdUser.Email, userData.Role);
+				} catch (roleErr) {
+					console.error("Error assigning role to user:", roleErr);
+					// Continue with user creation even if role assignment fails
+				}
+			}
 
 			// Refresh the users list after successful creation
 			await fetchUsers();
@@ -82,9 +93,16 @@ export default function UsersManagement() {
 			try {
 				await deleteUser(email);
 				await fetchUsers();
+				// Clear any previous errors
+				setError(null);
 			} catch (err: any) {
 				console.error("Error deleting user:", err);
-				setError(err.response?.data?.error || "Failed to delete user. Please try again.");
+				// Provide more detailed error message
+				const errorMessage = err.response?.data?.error || 
+					err.response?.data?.details || 
+					"Failed to delete user. Please try again.";
+				
+				setError(`Error: ${errorMessage}`);
 			}
 		}
 	};

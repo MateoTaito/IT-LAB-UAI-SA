@@ -8,7 +8,7 @@ import careersRouter from "./routes/Careers.routes";
 import reasonsRouter from "./routes/Reasons.routes";
 import attendanceRoutes from "./routes/Attendance.routes";
 import { startAttendanceAutoCheckout } from "./scheduler/attendanceAutoCheckout";
-import { seedDefaultAdmin } from "./utils/dbSeeder.util";
+import { seedDefaultAdmin, seedDefaultReasons } from "./utils/dbSeeder.util";
 
 // Define Conection to the Data Base
 async function connectDB() {
@@ -16,9 +16,10 @@ async function connectDB() {
 		await db.authenticate();
 		await db.sync();
 
-		// Seed default admin after DB sync
+		// Seed default admin and reasons after DB sync
 		await seedDefaultAdmin();
-		console.log("Database connected and initialized");
+		await seedDefaultReasons();
+		console.log("Database connected and initialized successfully");
 	} catch (error) {
 		console.log("Error while Trying to Connect to the Database", error);
 	}

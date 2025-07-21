@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User, UserCreationState } from "../../../../api/UsersApi";
+import { getRoles, Role } from "../../../../api/RolesApi";
 
 interface UserModalProps {
 	isOpen: boolean;
@@ -19,10 +20,34 @@ export default function UserModal({ isOpen, onClose, onSubmit, title, initialDat
 		Status: initialData?.Status || "active",
 	});
 
+	const [selectedRole, setSelectedRole] = useState<string>("");
+	const [roles, setRoles] = useState<Role[]>([]);
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [creationState, setCreationState] = useState<UserCreationState>(UserCreationState.IDLE);
 	const [stateMessage, setStateMessage] = useState<string>("");
+
+	// Load roles when component mounts or when modal opens
+	useEffect(() => {
+		if (isOpen) {
+			if (!isEdit) {
+				loadRoles();
+			}
+		}
+	}, [isOpen, isEdit]);
+
+	const loadRoles = async () => {
+		try {
+			const availableRoles = await getRoles();
+			setRoles(availableRoles);
+			// Set default role if available
+			if (availableRoles.length > 0) {
+				setSelectedRole(availableRoles[0].Name);
+			}
+		} catch (error) {
+			console.error("Error loading roles:", error);
+		}
+	};
 
 	if (!isOpen) return null;
 
@@ -63,6 +88,10 @@ export default function UserModal({ isOpen, onClose, onSubmit, title, initialDat
 			newErrors.LastName = "Last name is required";
 		}
 
+		if (!isEdit && !selectedRole?.trim()) {
+			newErrors.Role = "Role is required";
+		}
+
 		setErrors(newErrors);
 		return Object.keys(newErrors).length === 0;
 	};
@@ -91,11 +120,12 @@ export default function UserModal({ isOpen, onClose, onSubmit, title, initialDat
 					}
 				};
 
-				// Rename LastName to Lastname for create user API if needed
+				// Rename LastName to Lastname for create user API if needed and include the role
 				if (!isEdit && formData.LastName) {
 					await onSubmit({
 						...formData,
 						LastName: formData.LastName,
+						Role: selectedRole, // Include the selected role
 					}, handleStateChange);
 				} else {
 					await onSubmit(formData, handleStateChange);
@@ -273,6 +303,30 @@ export default function UserModal({ isOpen, onClose, onSubmit, title, initialDat
 									<option value="active">Active</option>
 									<option value="inactive">Inactive</option>
 								</select>
+							</div>
+						)}
+
+						{/* Role Field - only shown for create mode */}
+						{!isEdit && (
+							<div>
+								<label htmlFor="Role" className="block text-sm font-medium text-gray-700 mb-1">
+									Role
+								</label>
+								<select
+									id="Role"
+									name="Role"
+									value={selectedRole}
+									onChange={(e) => setSelectedRole(e.target.value)}
+									disabled={isSubmitting}
+									className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+										errors.Role ? "border-red-500" : ""
+									} ${isSubmitting ? "bg-gray-100 cursor-not-allowed" : ""}`}
+								>
+									{roles.map(role => (
+										<option key={role.Id} value={role.Name}>{role.Name}</option>
+									))}
+								</select>
+								{errors.Role && <p className="mt-1 text-xs text-red-600">{errors.Role}</p>}
 							</div>
 						)}
 					</div>

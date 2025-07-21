@@ -10,6 +10,7 @@ import Header from "../page_components/AdministratorPanel/Header";
 import DashboardContent from "../page_components/AdministratorPanel/Dashboard/DashboardContent";
 import UsersManagement from "../page_components/AdministratorPanel/Users/UsersManagement";
 import RolesManagement from "../page_components/AdministratorPanel/Roles/RolesManagement";
+import ReasonsManagement from "../page_components/AdministratorPanel/Reasons/ReasonsManagement";
 
 export default function AdministratorPanel() {
 	const { isAuthenticated, adminId, userId } = useAuth();
@@ -94,6 +95,7 @@ export default function AdministratorPanel() {
 							<Route path="/" element={<DashboardContent />} />
 							<Route path="/users" element={<UsersManagement />} />
 							<Route path="/roles" element={<RolesManagement />} />
+							<Route path="/reasons" element={<ReasonsManagement />} />
 							<Route path="*" element={<DashboardContent />} />
 						</Routes>
 					</div>

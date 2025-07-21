@@ -6,6 +6,7 @@ import Role from "../models/Role.model";
 import UserRole from "../models/UserRole.model";
 import Career from "../models/Career.model";
 import UserCareer from "../models/UserCareer.model";
+import Attendance from "../models/Attendance.model";
 
 export interface CreateUserDTO {
     Rut: string;
@@ -121,6 +122,14 @@ export const deleteUserByEmail = async (req: Request, res: Response) => {
             return res.status(404).json({ error: "User not found" });
         }
 
+        // Check if there are attendance records for this user
+        const attendanceRecords = await Attendance.findAll({ where: { UserId: user.Id } });
+        
+        // Delete attendance records if they exist
+        if (attendanceRecords && attendanceRecords.length > 0) {
+            await Attendance.destroy({ where: { UserId: user.Id } });
+        }
+
         // Unbind all roles from the user
         await UserRole.destroy({ where: { UserId: user.Id } });
 
@@ -140,7 +149,8 @@ export const deleteUserByEmail = async (req: Request, res: Response) => {
         await user.destroy();
         res.status(200).json({ message: "User deleted successfully" });
     } catch (error) {
-        res.status(500).json({ error: "Failed to delete user", details: error });
+        console.error("Error deleting user:", error);
+        res.status(500).json({ error: "Failed to delete user", details: error instanceof Error ? error.message : String(error) });
     }
 };
 

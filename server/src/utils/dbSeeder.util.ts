@@ -2,6 +2,7 @@ import User from "../models/User.model";
 import Admin from "../models/Admin.model";
 import Role from "../models/Role.model";
 import UserRole from "../models/UserRole.model";
+import Reason from "../models/Reason.model";
 import { hashString } from "./hash.util";
 
 export async function seedDefaultAdmin() {
@@ -45,5 +46,31 @@ export async function seedDefaultAdmin() {
         console.log("Default admin created successfully with Administrator role");
     } catch (error) {
         console.error("Error seeding default admin:", error);
+    }
+}
+
+export async function seedDefaultReasons() {
+    try {
+        const defaultReasons = [
+            { Name: "Study", Description: "Individual or group study session" },
+            { Name: "Project Work", Description: "Working on academic or research projects" },
+            { Name: "Tutorial", Description: "Attending or giving tutorials" },
+            { Name: "Meeting", Description: "Attending scheduled meetings" },
+            { Name: "Research", Description: "Conducting research activities" },
+            { Name: "Laboratory Work", Description: "Using laboratory equipment and facilities" },
+            { Name: "General", Description: "General purpose visit" }
+        ];
+
+        for (const reasonData of defaultReasons) {
+            const existingReason = await Reason.findOne({ where: { Name: reasonData.Name } });
+            if (!existingReason) {
+                await Reason.create(reasonData);
+                console.log(`Created default reason: ${reasonData.Name}`);
+            }
+        }
+
+        console.log("Default reasons seeding completed");
+    } catch (error) {
+        console.error("Error seeding default reasons:", error);
     }
 }

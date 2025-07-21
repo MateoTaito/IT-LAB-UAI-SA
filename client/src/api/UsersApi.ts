@@ -106,14 +106,23 @@ export async function listUsers(): Promise<User[]> {
  */
 export async function deleteUser(email: string): Promise<{ message: string }> {
     try {
+        // First delete the user from the database
         const response = await API_Users.delete('/delete-user', {
             data: { Email: email }
         });
-        const fingerprint_response = await API_Fingerprint.delete(`/users/${email}`, {
-            data: {
-                username: email,
-            }
-        });
+        
+        // Try to delete the fingerprint data, but don't fail if it doesn't work
+        try {
+            await API_Fingerprint.delete(`/users/${email}`, {
+                data: {
+                    username: email,
+                }
+            });
+        } catch (fingerprintError) {
+            // Log the error but continue since the user was deleted successfully
+            console.warn("Failed to delete fingerprint data, but user was deleted:", fingerprintError);
+        }
+        
         return response.data;
     } catch (error) {
         console.error("Failed to delete user:", error);
