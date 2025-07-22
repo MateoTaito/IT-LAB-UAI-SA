@@ -50,23 +50,25 @@ export const listAdmins = async (req: Request, res: Response) => {
             include: [
                 {
                     model: User,
-                    attributes: ["Rut", "Email", "Name", "LastName"]
+                    as: "UserFK",
+                    attributes: ["Id", "Rut", "Email", "Name", "LastName", "Status"]
                 }
             ]
         });
 
-        // Flatten the response to merge admin and user fields
-        const formattedAdmins = admins.map((admin: any) => {
-            const user = admin.UserFK?.dataValues || {};
-            return {
-                Id: admin.Id,
-                UserId: admin.UserId,
-                Password: admin.Password,
-                createdAt: admin.createdAt,
-                updatedAt: admin.updatedAt,
-                ...user
-            };
-        });
+        // Format response to match expected AdminListResponse interface
+        const formattedAdmins = admins.map((admin: any) => ({
+            Id: admin.Id,
+            UserId: admin.UserId,
+            User: {
+                Id: admin.UserFK.Id,
+                Rut: admin.UserFK.Rut,
+                Email: admin.UserFK.Email,
+                Name: admin.UserFK.Name,
+                LastName: admin.UserFK.LastName,
+                Status: admin.UserFK.Status || 'active'
+            }
+        }));
 
         res.status(200).json(formattedAdmins);
     } catch (error) {
@@ -91,6 +93,27 @@ export const deleteAdminByEmail = async (req: Request, res: Response) => {
         const admin = await Admin.findOne({ where: { UserId: user.Id } });
         if (!admin) {
             return res.status(404).json({ error: "Admin not found for this user" });
+        }
+
+        await admin.destroy();
+        res.status(200).json({ message: "Admin deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to delete admin", details: error });
+    }
+};
+
+export const deleteAdminById = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        
+        if (!id) {
+            return res.status(400).json({ error: "Admin ID is required" });
+        }
+
+        // Find the admin by ID
+        const admin = await Admin.findByPk(id);
+        if (!admin) {
+            return res.status(404).json({ error: "Admin not found" });
         }
 
         await admin.destroy();
