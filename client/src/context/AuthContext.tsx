@@ -6,11 +6,12 @@ interface AuthState {
 	userId: string | null;
 	adminId: string | null;
 	userEmail: string | null;
+	adminName: string | null;
 	loading: boolean;
 }
 
 interface AuthContextType extends AuthState {
-	login: (token: string, userId: string, adminId: string, email: string) => void;
+	login: (token: string, userId: string, adminId: string, email: string, adminName: string) => void;
 	logout: () => void;
 }
 
@@ -20,6 +21,7 @@ const initialAuthState: AuthState = {
 	userId: null,
 	adminId: null,
 	userEmail: null,
+	adminName: null,
 	loading: true,
 };
 
@@ -46,6 +48,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 		const userId = localStorage.getItem("auth_userId");
 		const adminId = localStorage.getItem("auth_adminId");
 		const userEmail = localStorage.getItem("auth_userEmail");
+		const adminName = localStorage.getItem("auth_adminName");
 
 		if (token && userId && adminId) {
 			setAuth({
@@ -54,6 +57,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 				userId,
 				adminId,
 				userEmail,
+				adminName,
 				loading: false,
 			});
 		} else {
@@ -61,12 +65,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 		}
 	}, []);
 
-	const login = (token: string, userId: string, adminId: string, email: string) => {
+	const login = (token: string, userId: string, adminId: string, email: string, adminName: string) => {
 		// Store auth data in localStorage
 		localStorage.setItem("auth_token", token);
 		localStorage.setItem("auth_userId", userId);
 		localStorage.setItem("auth_adminId", adminId);
 		localStorage.setItem("auth_userEmail", email);
+		localStorage.setItem("auth_adminName", adminName);
 
 		// Update auth state
 		setAuth({
@@ -75,6 +80,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 			userId,
 			adminId,
 			userEmail: email,
+			adminName,
 			loading: false,
 		});
 	};
@@ -85,6 +91,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 		localStorage.removeItem("auth_userId");
 		localStorage.removeItem("auth_adminId");
 		localStorage.removeItem("auth_userEmail");
+		localStorage.removeItem("auth_adminName");
 
 		// Reset auth state
 		setAuth({
@@ -93,15 +100,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 			userId: null,
 			adminId: null,
 			userEmail: null,
+			adminName: null,
 			loading: false,
 		});
 	};
 
-	const value = {
-		...auth,
-		login,
-		logout,
-	};
-
-	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+	return <AuthContext.Provider value={{ ...auth, login, logout }}>{children}</AuthContext.Provider>;
 };

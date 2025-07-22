@@ -10,6 +10,7 @@ export interface AdminLoginResponse {
     adminId: string;
     userId: string;
     token: string;
+    adminName: string;
 }
 
 export async function loginAdmin(credentials: AdminLoginCredentials): Promise<AdminLoginResponse> {
