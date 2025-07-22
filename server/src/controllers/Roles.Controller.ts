@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Role from "../models/Role.model";
 import User from "../models/User.model";
-import { col, fn } from "sequelize";
+import { col, fn, Op } from "sequelize";
 
 export interface CreateRoleDTO {
     Name: string;
@@ -64,6 +64,39 @@ export const listRoles = async (req: Request, res: Response) => {
         res.status(200).json(roles);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch roles", details: error });
+    }
+};
+
+export const listRolesForUsers = async (req: Request, res: Response) => {
+    try {
+        const roles = await Role.findAll({
+            where: {
+                Name: {
+                    [Op.not]: 'Administrator'
+                }
+            },
+            include: [
+                {
+                    model: User,
+                    attributes: [],
+                    through: { attributes: [] }
+                }
+            ],
+            attributes: [
+                'Id',
+                'Name',
+                'Description',
+                'createdAt',
+                'updatedAt',
+                [fn('COUNT', col('Users.Id')), 'UserCount']
+            ],
+            group: ['Role.Id'],
+            raw: true
+        });
+
+        res.status(200).json(roles);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch roles for users", details: error });
     }
 };
 

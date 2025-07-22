@@ -1,7 +1,8 @@
 import axios from "axios";
+import { API_BASE_URL } from '../config/api';
 
 const API_Roles = axios.create({
-    baseURL: "http://localhost:3000/api/roles",
+    baseURL: `${API_BASE_URL}/roles`,
 });
 
 // Add authorization header to requests when token is available

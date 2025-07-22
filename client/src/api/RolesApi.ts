@@ -24,6 +24,19 @@ export async function getRoles(): Promise<Role[]> {
 }
 
 /**
+ * Fetch roles excluding Administrator role (for user assignment)
+ */
+export async function getRolesForUsers(): Promise<Role[]> {
+    try {
+        const response = await API_Roles.get('/list-roles-for-users');
+        return response.data;
+    } catch (error) {
+        console.error("Failed to fetch roles for users:", error);
+        throw error;
+    }
+}
+
+/**
  * Create a new role
  * 
  * @param roleData Object containing Name and Description for the new role

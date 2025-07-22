@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { User, UserCreationState } from "../../../../api/UsersApi";
-import { getRoles, Role } from "../../../../api/RolesApi";
+import { getRolesForUsers, Role } from "../../../../api/RolesApi";
 
 interface UserModalProps {
 	isOpen: boolean;
@@ -38,7 +38,7 @@ export default function UserModal({ isOpen, onClose, onSubmit, title, initialDat
 
 	const loadRoles = async () => {
 		try {
-			const availableRoles = await getRoles();
+			const availableRoles = await getRolesForUsers();
 			setRoles(availableRoles);
 			// Set default role if available
 			if (availableRoles.length > 0) {
