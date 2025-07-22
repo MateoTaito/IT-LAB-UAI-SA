@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 
 const API_Attendance = axios.create({
-    baseURL: 'http://localhost:3000/api/attendance',
+    baseURL: `${API_BASE_URL}/attendance`,
 });
 
 // Add auth token to requests (for admin functions)

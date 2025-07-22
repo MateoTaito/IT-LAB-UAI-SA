@@ -1,7 +1,8 @@
-import axios from "axios";
+import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 
 const API_Users = axios.create({
-    baseURL: "http://localhost:3000/api/users",
+    baseURL: `${API_BASE_URL}/users`,
 });
 
 export default API_Users;

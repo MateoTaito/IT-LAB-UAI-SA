@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 
 const API_Verification = axios.create({
-    baseURL: 'http://localhost:3000/api/users',
+    baseURL: `${API_BASE_URL}/users`,
 });
 
 const API_External_Verification = axios.create({
@@ -9,11 +10,11 @@ const API_External_Verification = axios.create({
 });
 
 const API_Attendance_Public = axios.create({
-    baseURL: 'http://localhost:3000/api/attendance',
+    baseURL: `${API_BASE_URL}/attendance`,
 });
 
 const API_Reasons_Public = axios.create({
-    baseURL: 'http://localhost:3000/api/reasons',
+    baseURL: `${API_BASE_URL}/reasons`,
 });
 
 export interface UserCheckInDTO {

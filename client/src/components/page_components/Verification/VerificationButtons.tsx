@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getVerificationUser, checkInUserPublic, checkOutUserPublic, listReasonsPublic, Reason } from "../../../api/VerificationApi";
+import { API_BASE_URL } from "../../../config/api";
 
 export default function VerificationButtons() {
     const [loading, setLoading] = useState(false);
@@ -122,14 +123,6 @@ export default function VerificationButtons() {
                 </div>
             )}
 
-            {/* Debug info for mobile - remove this in production */}
-            {process.env.NODE_ENV === 'development' && (
-                <div className="w-full mb-4 p-2 bg-yellow-100 rounded text-xs">
-                    <div>Reasons loaded: {reasons.length}</div>
-                    <div>Selected: {selectedReason}</div>
-                    <div>Screen: {window.innerWidth}x{window.innerHeight}</div>
-                </div>
-            )}
 
             <div className="space-y-3 sm:space-y-4 w-full">
                 <button
