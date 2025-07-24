@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { getVerificationUser, checkInUserPublic, checkOutUserPublic, listReasonsPublic, Reason } from "../../../api/VerificationApi";
+import { getVerificationUser, getVerificationUserTest, checkInUserPublic, checkOutUserPublic, listReasonsPublic, Reason } from "../../../api/VerificationApi";
+import { listUsers, User } from "../../../api/UsersApi";
 import { API_BASE_URL } from "../../../config/api";
 
 export default function VerificationButtons() {
@@ -7,6 +8,11 @@ export default function VerificationButtons() {
     const [message, setMessage] = useState("");
     const [reasons, setReasons] = useState<Reason[]>([]);
     const [selectedReason, setSelectedReason] = useState("");
+    const [testEnv, setTestEnv] = useState<boolean>(false);
+    const [users, setUsers] = useState<User[]>([]);
+    const [showUserModal, setShowUserModal] = useState(false);
+    const [pendingAction, setPendingAction] = useState<'arrival' | 'departure' | null>(null);
+    const [selectedUserEmail, setSelectedUserEmail] = useState("");
 
     useEffect(() => {
         loadReasons();
@@ -26,12 +32,59 @@ export default function VerificationButtons() {
         }
     };
 
-    const handleArrival = async () => {
+    const loadUsers = async () => {
+        try {
+            const usersList = await listUsers();
+            setUsers(usersList);
+        } catch (error) {
+            console.error("Error loading users:", error);
+            setMessage("Error loading users. Please try again.");
+        }
+    };
+
+    const handleUserSelection = async (email: string) => {
+        setShowUserModal(false);
         setLoading(true);
         setMessage("");
 
         try {
-            // First, get the user email from the verification endpoint
+            if (pendingAction === 'arrival') {
+                await checkInUserPublic({
+                    email: email,
+                    checkIn: new Date(),
+                    Reason: selectedReason || "General"
+                });
+                setMessage(`Arrival recorded successfully for ${email}!`);
+            } else if (pendingAction === 'departure') {
+                await checkOutUserPublic({
+                    email: email,
+                    checkOut: new Date()
+                });
+                setMessage(`Departure recorded successfully for ${email}!`);
+            }
+        } catch (error: any) {
+            console.error(`Error recording ${pendingAction}:`, error);
+            const errorMessage = error?.response?.data?.message || `Error recording ${pendingAction}. Please try again.`;
+            setMessage(errorMessage);
+        } finally {
+            setLoading(false);
+            setPendingAction(null);
+            setSelectedUserEmail("");
+        }
+    };
+
+    const handleArrival = async () => {
+        if (testEnv) {
+            await loadUsers();
+            setPendingAction('arrival');
+            setShowUserModal(true);
+            return;
+        }
+
+        setLoading(true);
+        setMessage("");
+
+        try {
             const verificationResponse = await getVerificationUser();
             const userEmail = verificationResponse.email;
 
@@ -40,7 +93,6 @@ export default function VerificationButtons() {
                 return;
             }
 
-            // Then record check-in with attendance API
             await checkInUserPublic({
                 email: userEmail,
                 checkIn: new Date(),
@@ -58,11 +110,17 @@ export default function VerificationButtons() {
     };
 
     const handleDeparture = async () => {
+        if (testEnv) {
+            await loadUsers();
+            setPendingAction('departure');
+            setShowUserModal(true);
+            return;
+        }
+
         setLoading(true);
         setMessage("");
 
         try {
-            // First, get the user email from the verification endpoint
             const verificationResponse = await getVerificationUser();
             const userEmail = verificationResponse.email;
 
@@ -71,7 +129,6 @@ export default function VerificationButtons() {
                 return;
             }
 
-            // Then record check-out with attendance API
             await checkOutUserPublic({
                 email: userEmail,
                 checkOut: new Date()
@@ -90,8 +147,27 @@ export default function VerificationButtons() {
     return (
         <div className="bg-white bg-opacity-90 rounded-lg shadow-lg p-4 sm:p-8 w-full max-w-md mx-4 flex flex-col items-center">
             <img src="/logo_holder.png" alt="LAB-Control Logo" className="h-16 sm:h-20 w-auto mb-4 sm:mb-6" />
+
+            {/* Test Environment Toggle */}
+            <div className="flex items-center gap-2 mb-4">
+                <span className="text-sm text-gray-600">Test Mode:</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={testEnv}
+                        onChange={(e) => setTestEnv(e.target.checked)}
+                        title="Toggle test mode"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+                <span className={`text-xs font-medium ${testEnv ? 'text-blue-600' : 'text-gray-500'}`}>
+                    {testEnv ? 'ON' : 'OFF'}
+                </span>
+            </div>
+
             <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 text-gray-900">Lab Access Control</h1>
-            
+
             {message && (
                 <div className={`mb-4 sm:mb-6 p-3 rounded-md text-sm text-center w-full ${message.includes("Error") || message.includes("error") || message.includes("No user")
                     ? "bg-red-100 text-red-700 border border-red-300"
@@ -171,6 +247,60 @@ export default function VerificationButtons() {
                     Select your visit reason and use the buttons to record your attendance. User identification is automatic.
                 </p>
             </div>
+
+            {/* User Selection Modal */}
+            {showUserModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-96 overflow-hidden">
+                        <h3 className="text-lg font-semibold mb-4">
+                            Select User for {pendingAction === 'arrival' ? 'Arrival' : 'Departure'}
+                        </h3>
+
+                        <div className="mb-4">
+                            <input
+                                type="text"
+                                placeholder="Search users..."
+                                value={selectedUserEmail}
+                                onChange={(e) => setSelectedUserEmail(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+
+                        <div className="max-h-60 overflow-y-auto mb-4">
+                            {users
+                                .filter(user =>
+                                    user.Email.toLowerCase().includes(selectedUserEmail.toLowerCase()) ||
+                                    user.Name.toLowerCase().includes(selectedUserEmail.toLowerCase()) ||
+                                    user.LastName.toLowerCase().includes(selectedUserEmail.toLowerCase())
+                                )
+                                .map((user) => (
+                                    <button
+                                        key={user.Id}
+                                        onClick={() => handleUserSelection(user.Email)}
+                                        className="w-full text-left p-3 hover:bg-gray-100 border-b border-gray-200 transition-colors"
+                                    >
+                                        <div className="font-medium">{user.Name} {user.LastName}</div>
+                                        <div className="text-sm text-gray-600">{user.Email}</div>
+                                    </button>
+                                ))
+                            }
+                        </div>
+
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => {
+                                    setShowUserModal(false);
+                                    setPendingAction(null);
+                                    setSelectedUserEmail("");
+                                }}
+                                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

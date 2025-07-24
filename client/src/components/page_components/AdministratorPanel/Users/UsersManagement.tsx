@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { listUsers, createUser, deleteUser, updateUserStatus, assignRoleToUser, User, UserCreationState } from "../../../../api/UsersApi";
+import { listUsers, createUser, createUserTest, deleteUser, deleteUserTest, updateUserStatus, assignRoleToUser, User, UserCreationState } from "../../../../api/UsersApi";
 import UserModal from "./UserModal";
 
 export default function UsersManagement() {
@@ -10,6 +10,7 @@ export default function UsersManagement() {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [testEnv, setTestEnv] = useState<boolean>(false);
 
 	// Fetch users when component mounts
 	useEffect(() => {
@@ -51,7 +52,12 @@ export default function UsersManagement() {
 			};
 
 			// First create the user
-			const createdUser = await createUser(newUser, onStateChange);
+			let createdUser;
+			if (testEnv) {
+				createdUser = await createUserTest(newUser, onStateChange);
+			} else {
+				createdUser = await createUser(newUser, onStateChange);
+			}
 
 			// After user creation, assign the role if provided
 			if (userData.Role && createdUser) {
@@ -91,17 +97,22 @@ export default function UsersManagement() {
 	const handleDeleteUser = async (email: string) => {
 		if (window.confirm("Are you sure you want to delete this user?")) {
 			try {
-				await deleteUser(email);
+				if (testEnv) {
+					await deleteUserTest(email);
+				}
+				else {
+					await deleteUser(email);
+				}
 				await fetchUsers();
 				// Clear any previous errors
 				setError(null);
 			} catch (err: any) {
 				console.error("Error deleting user:", err);
 				// Provide more detailed error message
-				const errorMessage = err.response?.data?.error || 
-					err.response?.data?.details || 
+				const errorMessage = err.response?.data?.error ||
+					err.response?.data?.details ||
 					"Failed to delete user. Please try again.";
-				
+
 				setError(`Error: ${errorMessage}`);
 			}
 		}
@@ -133,7 +144,31 @@ export default function UsersManagement() {
 
 			<div className="bg-white p-6 rounded-lg shadow mb-6">
 				<div className="flex justify-between items-center mb-6">
-					<h2 className="text-xl font-semibold text-gray-800">User Management</h2>
+					<div className="flex items-center gap-4">
+						<h2 className="text-xl font-semibold text-gray-800">User Management</h2>
+
+						{/* Test Environment Toggle */}
+						<div className="flex items-center gap-2">
+							<span className="text-sm text-gray-600">Test Mode:</span>
+							<label className="relative inline-flex items-center cursor-pointer">
+								<label htmlFor="testEnvToggle" className="sr-only">Toggle Test Mode</label>
+								<input
+									id="testEnvToggle"
+									type="checkbox"
+									className="sr-only peer"
+									checked={testEnv}
+									onChange={(e) => setTestEnv(e.target.checked)}
+									title="Toggle test environment mode"
+									placeholder="Toggle test environment mode"
+								/>
+								<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+							</label>
+							<span className={`text-xs font-medium ${testEnv ? 'text-blue-600' : 'text-gray-500'}`}>
+								{testEnv ? 'ON' : 'OFF'}
+							</span>
+						</div>
+					</div>
+
 					<button
 						onClick={() => setShowAddModal(true)}
 						className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"

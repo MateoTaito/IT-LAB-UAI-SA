@@ -83,6 +83,25 @@ export async function createUser(
     }
 }
 
+export async function createUserTest(
+    userData: { Rut: string; Email: string; Name: string; Lastname: string },
+    onStateChange?: (state: UserCreationState, message?: string) => void
+): Promise<User> {
+    try {
+        // Step 1: Create user in database
+        onStateChange?.(UserCreationState.CREATING_USER, "Creating user account...");
+        const response = await API_Users.post('/create-user', userData);
+        const createdUser = response.data;
+
+        onStateChange?.(UserCreationState.SUCCESS, "User created!");
+        return createdUser;
+    } catch (error) {
+        onStateChange?.(UserCreationState.ERROR, "Failed to create user");
+        console.error("Failed to create user:", error);
+        throw error;
+    }
+}
+
 /**
  * Get a list of all users
  * 
@@ -122,6 +141,21 @@ export async function deleteUser(email: string): Promise<{ message: string }> {
             // Log the error but continue since the user was deleted successfully
             console.warn("Failed to delete fingerprint data, but user was deleted:", fingerprintError);
         }
+        
+        return response.data;
+    } catch (error) {
+        console.error("Failed to delete user:", error);
+        throw error;
+    }
+}
+
+export async function deleteUserTest(email: string): Promise<{ message: string }> {
+    try {
+        // First delete the user from the database
+        const response = await API_Users.delete('/delete-user', {
+            data: { Email: email }
+        });
+        // No fingerprint deletion in test mode, just return success
         
         return response.data;
     } catch (error) {
