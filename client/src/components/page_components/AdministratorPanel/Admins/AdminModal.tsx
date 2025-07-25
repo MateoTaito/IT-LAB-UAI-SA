@@ -8,10 +8,7 @@ interface AdminModalProps {
 
 export default function AdminModal({ isOpen, onClose, onSubmit }: AdminModalProps) {
     const [formData, setFormData] = useState({
-        Rut: "",
         Email: "",
-        Name: "",
-        LastName: "",
         Password: "",
         confirmPassword: ""
     });
@@ -20,11 +17,6 @@ export default function AdminModal({ isOpen, onClose, onSubmit }: AdminModalProp
 
     const validateForm = () => {
         const newErrors: { [key: string]: string } = {};
-
-        if (!formData.Rut.trim()) newErrors.Rut = "RUT is required";
-        if (!formData.Email.trim()) newErrors.Email = "Email is required";
-        if (!formData.Name.trim()) newErrors.Name = "Name is required";
-        if (!formData.LastName.trim()) newErrors.LastName = "Last Name is required";
         if (!formData.Password.trim()) newErrors.Password = "Password is required";
         if (formData.Password.length < 6) newErrors.Password = "Password must be at least 6 characters";
         if (formData.Password !== formData.confirmPassword) {
@@ -49,10 +41,7 @@ export default function AdminModal({ isOpen, onClose, onSubmit }: AdminModalProp
         setIsSubmitting(true);
         try {
             const adminData = {
-                Rut: formData.Rut,
                 Email: formData.Email,
-                Name: formData.Name,
-                LastName: formData.LastName,
                 Password: formData.Password
             };
             
@@ -60,10 +49,7 @@ export default function AdminModal({ isOpen, onClose, onSubmit }: AdminModalProp
             
             // Reset form
             setFormData({
-                Rut: "",
                 Email: "",
-                Name: "",
-                LastName: "",
                 Password: "",
                 confirmPassword: ""
             });
@@ -103,26 +89,7 @@ export default function AdminModal({ isOpen, onClose, onSubmit }: AdminModalProp
                         </svg>
                     </button>
                 </div>
-
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            RUT *
-                        </label>
-                        <input
-                            type="text"
-                            name="Rut"
-                            value={formData.Rut}
-                            onChange={handleInputChange}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                                errors.Rut ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                            placeholder="12345678-9"
-                            disabled={isSubmitting}
-                        />
-                        {errors.Rut && <p className="text-red-500 text-xs mt-1">{errors.Rut}</p>}
-                    </div>
-
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Email *
@@ -140,43 +107,6 @@ export default function AdminModal({ isOpen, onClose, onSubmit }: AdminModalProp
                         />
                         {errors.Email && <p className="text-red-500 text-xs mt-1">{errors.Email}</p>}
                     </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Name *
-                        </label>
-                        <input
-                            type="text"
-                            name="Name"
-                            value={formData.Name}
-                            onChange={handleInputChange}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                                errors.Name ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                            placeholder="John"
-                            disabled={isSubmitting}
-                        />
-                        {errors.Name && <p className="text-red-500 text-xs mt-1">{errors.Name}</p>}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Last Name *
-                        </label>
-                        <input
-                            type="text"
-                            name="LastName"
-                            value={formData.LastName}
-                            onChange={handleInputChange}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                                errors.LastName ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                            placeholder="Doe"
-                            disabled={isSubmitting}
-                        />
-                        {errors.LastName && <p className="text-red-500 text-xs mt-1">{errors.LastName}</p>}
-                    </div>
-
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Password *
@@ -194,7 +124,6 @@ export default function AdminModal({ isOpen, onClose, onSubmit }: AdminModalProp
                         />
                         {errors.Password && <p className="text-red-500 text-xs mt-1">{errors.Password}</p>}
                     </div>
-
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Confirm Password *

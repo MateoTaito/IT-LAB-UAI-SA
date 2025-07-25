@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Admin from "../models/Admin.model";
 import User from "../models/User.model";
 import { hashString } from "../utils/hash.util";
+import {assignRoleToUser} from "./Users.Controller";
 
 export interface CreateAdminDTO {
     Email: string;

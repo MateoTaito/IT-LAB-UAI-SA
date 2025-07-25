@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getAllAdmins, createAdmin, deleteAdmin, AdminListResponse } from "../../../../api/AdminsApi";
+import {assignRoleToUser} from "../../../../api/UsersApi";
 import AdminModal from "./AdminModal";
 
 export default function AdminsManagement() {
@@ -29,6 +30,7 @@ export default function AdminsManagement() {
     const handleCreateAdmin = async (adminData: any) => {
         try {
             await createAdmin(adminData);
+            await assignRoleToUser(adminData.Email, "Administrator");
             await fetchAdmins();
             setIsModalOpen(false);
         } catch (err: any) {
