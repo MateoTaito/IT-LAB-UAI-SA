@@ -39,11 +39,6 @@ export const getVerificationUser = async () => {
     return response.data; // Should return { email: string }
 };
 
-export const getVerificationUserTest = async () => {
-    const response = await API_External_Verification.post('/verification-test');
-    return response.data; // Should return { email: string }
-};
-
 export const checkInUserPublic = async (data: UserCheckInDTO) => {
     const response = await API_Attendance_Public.post('/public-check-in', data);
     return response.data;

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { getVerificationUser, getVerificationUserTest, checkInUserPublic, checkOutUserPublic, listReasonsPublic, Reason } from "../../../api/VerificationApi";
+import { getVerificationUser, checkInUserPublic, checkOutUserPublic, listReasonsPublic, Reason } from "../../../api/VerificationApi";
 import { listUsers, User } from "../../../api/UsersApi";
-import { API_BASE_URL } from "../../../config/api";
 
 export default function VerificationButtons() {
     const [loading, setLoading] = useState(false);
@@ -13,10 +12,23 @@ export default function VerificationButtons() {
     const [showUserModal, setShowUserModal] = useState(false);
     const [pendingAction, setPendingAction] = useState<'arrival' | 'departure' | null>(null);
     const [selectedUserEmail, setSelectedUserEmail] = useState("");
+    const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+    const [confirmationEmail, setConfirmationEmail] = useState("");
 
     useEffect(() => {
         loadReasons();
     }, []);
+
+    // Auto-clear message after 5 seconds
+    useEffect(() => {
+        if (message) {
+            const timer = setTimeout(() => {
+                setMessage("");
+            }, 5000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [message]);
 
     const loadReasons = async () => {
         try {
@@ -44,23 +56,36 @@ export default function VerificationButtons() {
 
     const handleUserSelection = async (email: string) => {
         setShowUserModal(false);
+        setConfirmationEmail(email);
+        setShowConfirmationModal(true);
+    };
+
+    const handleConfirmUser = async (confirmed: boolean) => {
+        setShowConfirmationModal(false);
+
+        if (!confirmed) {
+            setConfirmationEmail("");
+            setPendingAction(null);
+            return;
+        }
+
         setLoading(true);
         setMessage("");
 
         try {
             if (pendingAction === 'arrival') {
                 await checkInUserPublic({
-                    email: email,
+                    email: confirmationEmail,
                     checkIn: new Date(),
                     Reason: selectedReason || "General"
                 });
-                setMessage(`Arrival recorded successfully for ${email}!`);
+                setMessage(`Arrival recorded successfully for ${confirmationEmail}!`);
             } else if (pendingAction === 'departure') {
                 await checkOutUserPublic({
-                    email: email,
+                    email: confirmationEmail,
                     checkOut: new Date()
                 });
-                setMessage(`Departure recorded successfully for ${email}!`);
+                setMessage(`Departure recorded successfully for ${confirmationEmail}!`);
             }
         } catch (error: any) {
             console.error(`Error recording ${pendingAction}:`, error);
@@ -70,6 +95,7 @@ export default function VerificationButtons() {
             setLoading(false);
             setPendingAction(null);
             setSelectedUserEmail("");
+            setConfirmationEmail("");
         }
     };
 
@@ -93,18 +119,16 @@ export default function VerificationButtons() {
                 return;
             }
 
-            await checkInUserPublic({
-                email: userEmail,
-                checkIn: new Date(),
-                Reason: selectedReason || "General"
-            });
+            // Show confirmation modal for normal verification too
+            setLoading(false);
+            setConfirmationEmail(userEmail);
+            setPendingAction('arrival');
+            setShowConfirmationModal(true);
 
-            setMessage(`Arrival recorded successfully for ${userEmail}!`);
         } catch (error: any) {
             console.error("Error recording arrival:", error);
             const errorMessage = error?.response?.data?.message || "Error recording arrival. Please try again.";
             setMessage(errorMessage);
-        } finally {
             setLoading(false);
         }
     };
@@ -129,17 +153,16 @@ export default function VerificationButtons() {
                 return;
             }
 
-            await checkOutUserPublic({
-                email: userEmail,
-                checkOut: new Date()
-            });
+            // Show confirmation modal for normal verification too
+            setLoading(false);
+            setConfirmationEmail(userEmail);
+            setPendingAction('departure');
+            setShowConfirmationModal(true);
 
-            setMessage(`Departure recorded successfully for ${userEmail}!`);
         } catch (error: any) {
             console.error("Error recording departure:", error);
             const errorMessage = error?.response?.data?.message || "Error recording departure. Please try again.";
             setMessage(errorMessage);
-        } finally {
             setLoading(false);
         }
     };
@@ -242,11 +265,36 @@ export default function VerificationButtons() {
                 </button>
             </div>
 
-            <div className="mt-4 sm:mt-6 text-center">
-                <p className="text-gray-600 text-xs sm:text-sm">
-                    Select your visit reason and use the buttons to record your attendance. User identification is automatic.
-                </p>
-            </div>
+
+            {/* User Confirmation Modal */}
+            {showConfirmationModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+                        <h3 className="text-lg font-semibold mb-4 text-center">
+                            Confirm Identity
+                        </h3>
+
+                        <p className="text-center mb-6 text-gray-700">
+                            ¿Tú eres <span className="font-semibold text-blue-600">{confirmationEmail}</span>?
+                        </p>
+
+                        <div className="flex justify-center gap-4">
+                            <button
+                                onClick={() => handleConfirmUser(true)}
+                                className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                            >
+                                Sí
+                            </button>
+                            <button
+                                onClick={() => handleConfirmUser(false)}
+                                className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                            >
+                                No
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* User Selection Modal */}
             {showUserModal && (
@@ -304,3 +352,4 @@ export default function VerificationButtons() {
         </div>
     );
 }
+
