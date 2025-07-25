@@ -260,6 +260,44 @@ export async function updateUserStatus(email: string, status: 'active' | 'inacti
     }
 }
 
+export async function updateUserData(oldEmail: string, rut: string, name: string, lastName: string, email: string, status: 'active' | 'inactive', onStateChange?: (state: UserCreationState, message?: string) => void): Promise<{ message: string }> {
+    try {
+        onStateChange?.(UserCreationState.CREATING_USER, "Creating user account...");
+        try {
+            await API_Fingerprint.delete(`/users/${oldEmail}`, {
+                data: {
+                    username: oldEmail,
+                }
+            });
+            onStateChange?.(UserCreationState.WAITING_FINGERPRINT, "Please provide fingerprint for enrollment...");
+            onStateChange?.(UserCreationState.ENROLLING_FINGERPRINT, "Enrolling fingerprint...");
+            await API_Fingerprint.post('/enrollment/user', {
+            username: email,
+            password: "password",
+            finger: "right-index-finger",
+            label: "Primary finger"
+            });    
+            onStateChange?.(UserCreationState.SUCCESS, "User created!");
+        } catch (fingerprintError) {
+            // Log the error but continue since the user was deleted successfully
+            console.warn("Failed to delete fingerprint data, but user was deleted:", fingerprintError);
+            onStateChange?.(UserCreationState.ERROR, "Failed to create user or enroll fingerprint");
+        }
+        const response = await API_Users.put('/update-user-data', {
+            OldEmail: oldEmail,
+            Rut: rut,
+            Name: name,
+            LastName: lastName,
+            Email: email,
+            Status: status,
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Failed to update user data:", error);
+        throw error;
+    }
+}
+
 /**
  * Assign a career to a user
  * 

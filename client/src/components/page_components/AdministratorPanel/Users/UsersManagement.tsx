@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { listUsers, createUser, createUserTest, deleteUser, deleteUserTest, updateUserStatus, assignRoleToUser, User, UserCreationState } from "../../../../api/UsersApi";
+import { listUsers, 
+	createUser, 
+	createUserTest,
+	deleteUser,
+	deleteUserTest, 
+	updateUserStatus, 
+	assignRoleToUser, 
+	User, 
+	UserCreationState, 
+	updateUserData } from "../../../../api/UsersApi";
 import UserModal from "./UserModal";
 
 export default function UsersManagement() {
@@ -78,12 +87,18 @@ export default function UsersManagement() {
 	};
 
 	// Update user status - Modified to accept partial user data
-	const handleUpdateUser = async (userData: any): Promise<void> => {
+	const handleUpdateUser = async (userData: any, onStateChange?: (state: UserCreationState, message?: string) => void): Promise<void> => {
 		try {
-			if (currentUser && userData.Status && userData.Status !== currentUser.Status) {
-				await updateUserStatus(userData.Email, userData.Status as "active" | "inactive");
-			}
-
+			if (currentUser) {
+				await updateUserData(
+					currentUser.Email,
+					userData.Rut, 
+					userData.Name, 
+					userData.LastName, 
+					userData.Email, 
+					userData.Status as "active" | "inactive",
+					onStateChange
+				)}
 			await fetchUsers();
 			setShowEditModal(false);
 			setCurrentUser(null);

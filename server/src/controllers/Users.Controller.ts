@@ -52,6 +52,15 @@ export interface UpdateUserStatusDTO {
     Status: 'active' | 'inactive';
 }
 
+export interface UpdateUserDataDTO {
+    OldEmail: string,
+    Email: string,
+    Rut: string,
+    Name: string,
+    LastName: string,
+    Status: "active" | "inactive",
+}
+
 export const createUser = async (req: Request, res: Response) => {
     try {
         const userData: CreateUserDTO = req.body;
@@ -426,6 +435,35 @@ export const updateUserStatus = async (req: Request, res: Response) => {
         await user.save();
 
         res.status(200).json({ message: "User status updated successfully", status: userData.Status });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to update user status", details: error });
+    }
+};
+
+export const updateUserData = async (req: Request, res: Response) => {
+    try {
+        const userData: UpdateUserDataDTO = req.body;
+        if (!userData.Email || !userData.Status) {
+            return res.status(400).json({ error: "Email and Status are required" });
+        }
+
+        if (userData.Status !== 'active' && userData.Status !== 'inactive') {
+            return res.status(400).json({ error: "Status must be either 'active' or 'inactive'" });
+        }
+
+        const user = await User.findOne({ where: { Email: userData.OldEmail } });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        user.Status = userData.Status;
+        user.Name = userData.Name;
+        user.LastName = userData.LastName;
+        user.Email = userData.Email;
+        user.Rut = userData.Rut;
+        await user.save();
+
+        res.status(200).json({ message: "User data updated successfully", status: userData.Status });
     } catch (error) {
         res.status(500).json({ error: "Failed to update user status", details: error });
     }

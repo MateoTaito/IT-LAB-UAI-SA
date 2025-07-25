@@ -10,7 +10,8 @@ import {
     getUsersByCareer,
     deleteUserCareer,
     getUserById,
-    updateUserStatus
+    updateUserStatus,
+    updateUserData
 } from "../controllers/Users.Controller";
 import { jwtAuth } from "../middleware/jwtAuth.middleware";
 
@@ -65,6 +66,10 @@ router.put("/update-status", jwtAuth, (req: Request, res: Response) => {
 // Public endpoint for verification (no auth required)
 router.put("/public-update-status", (req: Request, res: Response) => {
     updateUserStatus(req, res);
+});
+
+router.put("/update-user-data", jwtAuth, (req: Request, res: Response) => {
+    updateUserData(req, res);
 });
 
 export default router;

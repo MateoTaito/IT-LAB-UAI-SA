@@ -130,14 +130,6 @@ export default function UserModal({ isOpen, onClose, onSubmit, title, initialDat
 				} else {
 					await onSubmit(formData, handleStateChange);
 				}
-
-				// For edit mode, close immediately on success
-				if (isEdit) {
-					setIsSubmitting(false);
-					setCreationState(UserCreationState.IDLE);
-					setStateMessage("");
-					onClose();
-				}
 			} catch (error) {
 				setIsSubmitting(false);
 				setCreationState(UserCreationState.ERROR);
@@ -185,8 +177,8 @@ export default function UserModal({ isOpen, onClose, onSubmit, title, initialDat
 			<div className="bg-white p-6 rounded-lg max-w-md w-full">
 				<h3 className="text-lg font-medium mb-4">{title}</h3>
 
-				{/* Progress indicator for user creation */}
-				{isSubmitting && !isEdit && (
+				{/* Progress indicator for user operations */}
+				{isSubmitting && (
 					<div className="mb-4 p-3 rounded-md bg-blue-50 border border-blue-200">
 						<div className="flex items-center">
 							{creationState === UserCreationState.WAITING_FINGERPRINT ? (
@@ -203,7 +195,7 @@ export default function UserModal({ isOpen, onClose, onSubmit, title, initialDat
 
 						{creationState === UserCreationState.WAITING_FINGERPRINT && (
 							<div className="mt-2 text-xs text-yellow-700">
-								Please place finger on the fingerprint scanner and wait for enrollment to complete.
+								Please place finger on the fingerprint scanner and wait for {isEdit ? 'update' : 'enrollment'} to complete.
 							</div>
 						)}
 					</div>
