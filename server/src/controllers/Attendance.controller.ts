@@ -160,6 +160,184 @@ export const getTopUsers = async (req: Request, res: Response) => {
     }
 };
 
+export const getLabUtilization = async (req: Request, res: Response) => {
+    try {
+        const { Op } = require("sequelize");
+        
+        // Get date from query parameters, default to today
+        const dateParam = req.query.date as string;
+        const targetDate = dateParam ? new Date(dateParam) : new Date();
+        
+        const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 8, 30, 0); // 08:30
+        const endOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 17, 30, 0); // 17:30
+        
+        // Get all attendance records for the target date (both active and completed)
+        const dayAttendances = await Attendance.findAll({
+            where: {
+                CheckIn: {
+                    [Op.gte]: startOfDay,
+                    [Op.lte]: endOfDay
+                }
+            },
+            include: [{ model: User }, { model: ReasonModel }]
+        });
+
+        // Constants
+        const MAX_CAPACITY = 10;
+        const TOTAL_MINUTES = 9 * 60; // 9 hours * 60 minutes
+        const MAX_POSSIBLE_MINUTES = MAX_CAPACITY * TOTAL_MINUTES;
+
+        // Calculate utilization by minute
+        let totalUtilizedMinutes = 0;
+
+        // Create time slots for each minute of the day
+        for (let minute = 0; minute < TOTAL_MINUTES; minute++) {
+            const currentTime = new Date(startOfDay.getTime() + minute * 60000); // Add minutes
+            let usersAtThisTime = 0;
+
+            // Count how many users were present at this specific minute
+            dayAttendances.forEach((attendance: any) => {
+                const checkIn = new Date(attendance.CheckIn);
+                const checkOut = attendance.CheckOut ? new Date(attendance.CheckOut) : endOfDay;
+
+                // If user was present at this time
+                if (checkIn <= currentTime && checkOut > currentTime) {
+                    usersAtThisTime++;
+                }
+            });
+
+            // Cap at maximum capacity for calculation
+            const effectiveUsers = Math.min(usersAtThisTime, MAX_CAPACITY);
+            totalUtilizedMinutes += effectiveUsers;
+        }
+
+        // Calculate percentage
+        const utilizationPercentage = Math.round((totalUtilizedMinutes / MAX_POSSIBLE_MINUTES) * 100);
+        
+        // Convert minutes to hours and minutes for better readability
+        const utilizationHours = Math.floor(totalUtilizedMinutes / 60);
+        const utilizationMinutesRemainder = totalUtilizedMinutes % 60;
+
+        return res.status(200).json({
+            utilizationPercentage,
+            totalUtilizedMinutes,
+            utilizationHours,
+            utilizationMinutesRemainder,
+            maxPossibleMinutes: MAX_POSSIBLE_MINUTES,
+            currentOccupancy: dayAttendances.filter((a: any) => !a.CheckOut).length,
+            maxCapacity: MAX_CAPACITY,
+            date: targetDate.toISOString().split('T')[0]
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Internal server error.", error });
+    }
+};
+
+export const getMonthlyUtilization = async (req: Request, res: Response) => {
+    try {
+        const { Op } = require("sequelize");
+        
+        // Get month and year from query parameters, default to current month
+        const monthParam = req.query.month as string;
+        const yearParam = req.query.year as string;
+        
+        const currentDate = new Date();
+        const targetMonth = monthParam ? parseInt(monthParam) - 1 : currentDate.getMonth(); // Month is 0-indexed
+        const targetYear = yearParam ? parseInt(yearParam) : currentDate.getFullYear();
+        
+        // Get first and last day of the month
+        const firstDay = new Date(targetYear, targetMonth, 1);
+        const lastDay = new Date(targetYear, targetMonth + 1, 0);
+        
+        // Generate all business days in the month (excluding weekends)
+        const businessDays = [];
+        for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+            const dayOfWeek = d.getDay();
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Exclude Sunday (0) and Saturday (6)
+                businessDays.push(new Date(d));
+            }
+        }
+        
+        // Calculate utilization for each business day
+        const dailyUtilizations = [];
+        let totalMonthlyUtilizedMinutes = 0;
+        
+        for (const day of businessDays) {
+            const startOfDay = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 8, 30, 0);
+            const endOfDay = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 17, 30, 0);
+            
+            // Get attendance records for this day
+            const dayAttendances = await Attendance.findAll({
+                where: {
+                    CheckIn: {
+                        [Op.gte]: startOfDay,
+                        [Op.lte]: endOfDay
+                    }
+                },
+                include: [{ model: User }, { model: ReasonModel }]
+            });
+            
+            // Calculate daily utilization
+            const MAX_CAPACITY = 10;
+            const TOTAL_MINUTES = 9 * 60;
+            let dailyUtilizedMinutes = 0;
+            
+            for (let minute = 0; minute < TOTAL_MINUTES; minute++) {
+                const currentTime = new Date(startOfDay.getTime() + minute * 60000);
+                let usersAtThisTime = 0;
+                
+                dayAttendances.forEach((attendance: any) => {
+                    const checkIn = new Date(attendance.CheckIn);
+                    const checkOut = attendance.CheckOut ? new Date(attendance.CheckOut) : endOfDay;
+                    
+                    if (checkIn <= currentTime && checkOut > currentTime) {
+                        usersAtThisTime++;
+                    }
+                });
+                
+                const effectiveUsers = Math.min(usersAtThisTime, MAX_CAPACITY);
+                dailyUtilizedMinutes += effectiveUsers;
+            }
+            
+            const dailyPercentage = Math.round((dailyUtilizedMinutes / (MAX_CAPACITY * TOTAL_MINUTES)) * 100);
+            totalMonthlyUtilizedMinutes += dailyUtilizedMinutes;
+            
+            dailyUtilizations.push({
+                date: day.toISOString().split('T')[0],
+                utilizationPercentage: dailyPercentage,
+                utilizedMinutes: dailyUtilizedMinutes,
+                activeUsers: dayAttendances.length
+            });
+        }
+        
+        // Calculate monthly averages
+        const totalPossibleMinutes = businessDays.length * 10 * (9 * 60);
+        const monthlyPercentage = Math.round((totalMonthlyUtilizedMinutes / totalPossibleMinutes) * 100);
+        const averageDailyPercentage = Math.round(dailyUtilizations.reduce((sum, day) => sum + day.utilizationPercentage, 0) / dailyUtilizations.length);
+        
+        // Convert total minutes to hours and minutes
+        const totalHours = Math.floor(totalMonthlyUtilizedMinutes / 60);
+        const totalMinutesRemainder = totalMonthlyUtilizedMinutes % 60;
+        
+        return res.status(200).json({
+            month: targetMonth + 1, // Convert back to 1-indexed
+            year: targetYear,
+            monthlyUtilizationPercentage: monthlyPercentage,
+            averageDailyUtilizationPercentage: averageDailyPercentage,
+            totalUtilizedMinutes: totalMonthlyUtilizedMinutes,
+            totalUtilizedHours: totalHours,
+            totalUtilizedMinutesRemainder: totalMinutesRemainder,
+            businessDaysCount: businessDays.length,
+            totalPossibleMinutes,
+            dailyBreakdown: dailyUtilizations,
+            peakDay: dailyUtilizations.reduce((max, day) => day.utilizationPercentage > max.utilizationPercentage ? day : max, dailyUtilizations[0] || {}),
+            lowDay: dailyUtilizations.reduce((min, day) => day.utilizationPercentage < min.utilizationPercentage ? day : min, dailyUtilizations[0] || {})
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Internal server error.", error });
+    }
+};
+
 export const checkOut = async (req: Request<{}, {}, UserCheckOutDTO>, res: Response) => {
     const { email, checkOut } = req.body;
 

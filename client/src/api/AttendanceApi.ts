@@ -49,6 +49,39 @@ export interface TopUser {
     averageSessionHours: number;
 }
 
+export interface LabUtilization {
+    utilizationPercentage: number;
+    totalUtilizedMinutes: number;
+    utilizationHours: number;
+    utilizationMinutesRemainder: number;
+    maxPossibleMinutes: number;
+    currentOccupancy: number;
+    maxCapacity: number;
+    date: string;
+}
+
+export interface DailyUtilization {
+    date: string;
+    utilizationPercentage: number;
+    utilizedMinutes: number;
+    activeUsers: number;
+}
+
+export interface MonthlyUtilization {
+    month: number;
+    year: number;
+    monthlyUtilizationPercentage: number;
+    averageDailyUtilizationPercentage: number;
+    totalUtilizedMinutes: number;
+    totalUtilizedHours: number;
+    totalUtilizedMinutesRemainder: number;
+    businessDaysCount: number;
+    totalPossibleMinutes: number;
+    dailyBreakdown: DailyUtilization[];
+    peakDay: DailyUtilization;
+    lowDay: DailyUtilization;
+}
+
 export const checkInUser = async (data: UserCheckInDTO) => {
     const response = await API_Attendance.post('/check-in-user', data);
     return response.data;
@@ -90,6 +123,23 @@ export const getRecentActivity = async (limit: number = 10): Promise<ActiveUser[
 
 export const getTopUsers = async (): Promise<TopUser[]> => {
     const response = await API_Attendance.get('/top-users');
+    return response.data;
+};
+
+export const getLabUtilization = async (date?: string): Promise<LabUtilization> => {
+    const url = date ? `/lab-utilization?date=${date}` : '/lab-utilization';
+    const response = await API_Attendance.get(url);
+    return response.data;
+};
+
+export const getMonthlyUtilization = async (month?: number, year?: number): Promise<MonthlyUtilization> => {
+    let url = '/monthly-utilization';
+    const params: string[] = [];
+    if (month) params.push(`month=${month}`);
+    if (year) params.push(`year=${year}`);
+    if (params.length > 0) url += `?${params.join('&')}`;
+    
+    const response = await API_Attendance.get(url);
     return response.data;
 };
 

@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { listUsers } from "../../../../api/UsersApi";
-import { listActiveUsers } from "../../../../api/AttendanceApi";
+import { listActiveUsers, getLabUtilization, LabUtilization } from "../../../../api/AttendanceApi";
 import ActiveUsersTable from "./ActiveUsersTable";
 import RecentActivityTable from "./RecentActivityTable";
 import TopUsersTable from "./TopUsersTable";
+import HistoricalMetrics from "./HistoricalMetrics";
 
 export default function DashboardContent() {
 	const [totalUsers, setTotalUsers] = useState<number>(0);
 	const [activeSessions, setActiveSessions] = useState<number>(0);
+	const [labUtilization, setLabUtilization] = useState<LabUtilization | null>(null);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
@@ -16,13 +18,15 @@ export default function DashboardContent() {
 
 	const fetchDashboardData = async () => {
 		try {
-			const [users, activeUsers] = await Promise.all([
+			const [users, activeUsers, utilization] = await Promise.all([
 				listUsers(),
-				listActiveUsers()
+				listActiveUsers(),
+				getLabUtilization()
 			]);
 
 			setTotalUsers(users.length);
 			setActiveSessions(activeUsers.length);
+			setLabUtilization(utilization);
 		} catch (error) {
 			console.error("Error fetching dashboard data:", error);
 		} finally {
@@ -35,7 +39,7 @@ export default function DashboardContent() {
 			<div className="bg-white p-6 rounded-lg shadow">
 				<h2 className="text-xl font-semibold mb-4 text-gray-800">Dashboard Overview</h2>
 
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 					<div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
 						<h3 className="text-lg font-medium text-indigo-700">Total Users</h3>
 						<p className="text-3xl font-bold text-indigo-900">
@@ -64,9 +68,34 @@ export default function DashboardContent() {
 							{loading ? (
 								<div className="animate-pulse bg-purple-200 h-8 w-8 rounded"></div>
 							) : (
-								totalUsers > 0 ? Math.round((activeSessions / totalUsers) * 100) : 0
-							)}%
+								`${labUtilization?.utilizationPercentage || 0}%`
+							)}
 						</p>
+						{labUtilization && (
+							<p className="text-sm text-purple-600 mt-1">
+								{labUtilization.currentOccupancy}/{labUtilization.maxCapacity} ocupado
+							</p>
+						)}
+					</div>
+
+					<div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
+						<h3 className="text-lg font-medium text-orange-700">Usage Time</h3>
+						<p className="text-3xl font-bold text-orange-900">
+							{loading ? (
+								<div className="animate-pulse bg-orange-200 h-8 w-8 rounded"></div>
+							) : labUtilization ? (
+								labUtilization.utilizationHours > 0
+									? `${labUtilization.utilizationHours}h ${labUtilization.utilizationMinutesRemainder}m`
+									: `${labUtilization.utilizationMinutesRemainder}m`
+							) : (
+								"0m"
+							)}
+						</p>
+						{labUtilization && (
+							<p className="text-sm text-orange-600 mt-1">
+								de {Math.floor(labUtilization.maxPossibleMinutes / 60)}h posibles
+							</p>
+						)}
 					</div>
 				</div>
 
@@ -84,6 +113,9 @@ export default function DashboardContent() {
 
 			{/* Top Users Table */}
 			<TopUsersTable />
+
+			{/* Historical Metrics */}
+			<HistoricalMetrics />
 
 			{/* Recent Activity Table */}
 			<RecentActivityTable />
