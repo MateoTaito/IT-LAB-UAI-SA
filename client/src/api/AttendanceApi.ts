@@ -38,6 +38,17 @@ export interface ActiveUser {
     Reason: string;
 }
 
+export interface TopUser {
+    userId: number;
+    email: string;
+    name: string;
+    lastName: string;
+    totalTime: number;
+    sessionCount: number;
+    totalTimeHours: number;
+    averageSessionHours: number;
+}
+
 export const checkInUser = async (data: UserCheckInDTO) => {
     const response = await API_Attendance.post('/check-in-user', data);
     return response.data;
@@ -75,6 +86,11 @@ export const getRecentActivity = async (limit: number = 10): Promise<ActiveUser[
     });
     
     return sorted.slice(0, limit);
+};
+
+export const getTopUsers = async (): Promise<TopUser[]> => {
+    const response = await API_Attendance.get('/top-users');
+    return response.data;
 };
 
 export default API_Attendance;

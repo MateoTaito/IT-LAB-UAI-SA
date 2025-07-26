@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { checkIn, listActiveUsers, listInactiveUsers, listAllUsersAttendance, checkOut } from "../controllers/Attendance.controller";
+import { checkIn, listActiveUsers, listInactiveUsers, listAllUsersAttendance, checkOut, getTopUsers } from "../controllers/Attendance.controller";
 import { jwtAuth } from "../middleware/jwtAuth.middleware";
 import { forceAttendanceAutoCheckout } from "../scheduler/attendanceAutoCheckout";
 
@@ -32,6 +32,10 @@ router.get("/list-inactive-users", jwtAuth, (req: Request, res: Response) => {
 
 router.get("/list-all-users", jwtAuth, (req: Request, res: Response) => {
     listAllUsersAttendance(req, res);
+});
+
+router.get("/top-users", jwtAuth, (req: Request, res: Response) => {
+    getTopUsers(req, res);
 });
 
 router.post("/force-auto-checkout", async (req: Request, res: Response) => {

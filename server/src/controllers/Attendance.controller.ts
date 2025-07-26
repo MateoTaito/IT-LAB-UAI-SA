@@ -107,6 +107,59 @@ export const listAllUsersAttendance = async (req: Request, res: Response) => {
     }
 };
 
+export const getTopUsers = async (req: Request, res: Response) => {
+    try {
+        // Get all completed attendance records (with CheckOut)
+        const completedAttendances = await Attendance.findAll({
+            where: { 
+                CheckOut: { 
+                    [require("sequelize").Op.not]: null 
+                } 
+            },
+            include: [{ model: User }, { model: ReasonModel }]
+        });
+
+        // Calculate total time for each user
+        const userStats = new Map();
+        
+        completedAttendances.forEach((attendance: any) => {
+            const userId = attendance.UserId;
+            const checkIn = new Date(attendance.CheckIn);
+            const checkOut = new Date(attendance.CheckOut);
+            const duration = checkOut.getTime() - checkIn.getTime(); // milliseconds
+            
+            if (!userStats.has(userId)) {
+                userStats.set(userId, {
+                    userId: userId,
+                    email: attendance.User?.Email,
+                    name: attendance.User?.Name,
+                    lastName: attendance.User?.LastName,
+                    totalTime: 0,
+                    sessionCount: 0
+                });
+            }
+            
+            const user = userStats.get(userId);
+            user.totalTime += duration;
+            user.sessionCount += 1;
+        });
+
+        // Convert to array and sort by total time
+        const sortedUsers = Array.from(userStats.values())
+            .sort((a, b) => b.totalTime - a.totalTime)
+            .slice(0, 5) // Top 5
+            .map(user => ({
+                ...user,
+                totalTimeHours: Math.round((user.totalTime / (1000 * 60 * 60)) * 100) / 100, // Convert to hours with 2 decimals
+                averageSessionHours: Math.round((user.totalTime / user.sessionCount / (1000 * 60 * 60)) * 100) / 100
+            }));
+
+        return res.status(200).json(sortedUsers);
+    } catch (error) {
+        return res.status(500).json({ message: "Internal server error.", error });
+    }
+};
+
 export const checkOut = async (req: Request<{}, {}, UserCheckOutDTO>, res: Response) => {
     const { email, checkOut } = req.body;
 

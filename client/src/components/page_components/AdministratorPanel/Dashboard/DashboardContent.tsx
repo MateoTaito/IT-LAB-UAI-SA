@@ -3,6 +3,7 @@ import { listUsers } from "../../../../api/UsersApi";
 import { listActiveUsers } from "../../../../api/AttendanceApi";
 import ActiveUsersTable from "./ActiveUsersTable";
 import RecentActivityTable from "./RecentActivityTable";
+import TopUsersTable from "./TopUsersTable";
 
 export default function DashboardContent() {
 	const [totalUsers, setTotalUsers] = useState<number>(0);
@@ -19,7 +20,7 @@ export default function DashboardContent() {
 				listUsers(),
 				listActiveUsers()
 			]);
-			
+
 			setTotalUsers(users.length);
 			setActiveSessions(activeUsers.length);
 		} catch (error) {
@@ -80,6 +81,9 @@ export default function DashboardContent() {
 
 			{/* Active Users Table */}
 			<ActiveUsersTable />
+
+			{/* Top Users Table */}
+			<TopUsersTable />
 
 			{/* Recent Activity Table */}
 			<RecentActivityTable />
