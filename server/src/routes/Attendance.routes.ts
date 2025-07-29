@@ -1,5 +1,15 @@
 import { Router, Request, Response } from "express";
-import { checkIn, listActiveUsers, listInactiveUsers, listAllUsersAttendance, checkOut, getTopUsers, getLabUtilization, getMonthlyUtilization } from "../controllers/Attendance.controller";
+import {
+    checkIn,
+    listActiveUsers,
+    listInactiveUsers,
+    listAllUsersAttendance,
+    checkOut,
+    getTopUsers,
+    getLabUtilization,
+    getMonthlyUtilization,
+    getHourlyUtilization,
+} from "../controllers/Attendance.controller";
 import { jwtAuth } from "../middleware/jwtAuth.middleware";
 import { forceAttendanceAutoCheckout } from "../scheduler/attendanceAutoCheckout";
 
@@ -44,6 +54,10 @@ router.get("/lab-utilization", jwtAuth, (req: Request, res: Response) => {
 
 router.get("/monthly-utilization", jwtAuth, (req: Request, res: Response) => {
     getMonthlyUtilization(req, res);
+});
+
+router.get("/hourly-utilization", jwtAuth, (req: Request, res: Response) => {
+    getHourlyUtilization(req, res);
 });
 
 router.post("/force-auto-checkout", async (req: Request, res: Response) => {
