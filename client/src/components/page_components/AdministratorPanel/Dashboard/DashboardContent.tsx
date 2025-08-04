@@ -142,26 +142,33 @@ export default function DashboardContent() {
                 </div>
             </div>
 
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {/* Daily Utilization Chart */}
-                <DailyUtilizationChart />
+            {/* Main Content Grid - More Efficient Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left Column - Daily Chart (spans 2 columns) */}
+                <div className="lg:col-span-2">
+                    <DailyUtilizationChart />
+                </div>
 
-                {/* Monthly Utilization Chart */}
-                <MonthlyUtilizationChart />
+                {/* Right Column - Active Users Table */}
+                <div className="lg:col-span-1">
+                    <ActiveUsersTable />
+                </div>
             </div>
 
-            {/* Active Users Table */}
-            <ActiveUsersTable />
+            {/* Secondary Content Grid */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                {/* Monthly Chart - Reduced priority */}
+                <MonthlyUtilizationChart />
 
-            {/* Top Users Table */}
-            <TopUsersTable />
+                {/* Top Users - Better positioned */}
+                <TopUsersTable />
+            </div>
+
+            {/* Recent Activity - Full width for detailed view */}
+            <RecentActivityTable />
 
             {/* Historical Metrics */}
             {/* <HistoricalMetrics /> */}
-
-            {/* Recent Activity Table */}
-            <RecentActivityTable />
         </div>
     );
 }

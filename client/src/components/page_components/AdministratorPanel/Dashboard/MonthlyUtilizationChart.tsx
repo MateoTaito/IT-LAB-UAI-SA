@@ -256,8 +256,8 @@ export default function MonthlyUtilizationChart() {
     }
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 space-y-4 lg:space-y-0">
+        <div className="bg-white p-4 rounded-lg shadow">
+            <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">
                     Monthly Lab Utilization
                 </h3>
@@ -331,8 +331,8 @@ export default function MonthlyUtilizationChart() {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
                     <h4 className="text-sm font-medium text-blue-700">
                         Monthly Average
                     </h4>
@@ -342,36 +342,36 @@ export default function MonthlyUtilizationChart() {
                         )}
                         %
                     </p>
-                    <p className="text-xs text-blue-600 mt-1">
+                    <p className="text-xs text-blue-600">
                         Average daily utilization
                     </p>
                 </div>
 
-                <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-                    <h4 className="text-sm font-medium text-green-700">
-                        Total Usage
+                <div className="bg-green-50 p-3 rounded-lg border border-green-100">
+                    <h4 className="text-xs font-medium text-green-700">
+                        Sessions
                     </h4>
-                    <p className="text-2xl font-bold text-green-900">
+                    <p className="text-lg font-bold text-green-900">
                         {monthlyData?.totalUtilizedHours || 0}h
                     </p>
-                    <p className="text-xs text-green-600 mt-1">
+                    <p className="text-xs text-green-600">
                         {monthlyData?.totalUtilizedMinutesRemainder || 0}m
                         additional
                     </p>
                 </div>
 
-                <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
-                    <h4 className="text-sm font-medium text-purple-700">
-                        Peak Day
+                <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
+                    <h4 className="text-xs font-medium text-purple-700">
+                        Users
                     </h4>
-                    <p className="text-xl font-bold text-purple-900">
+                    <p className="text-lg font-bold text-purple-900">
                         {monthlyData?.peakDay
                             ? parseDisplayDate(
                                   monthlyData.peakDay.date,
                               ).getDate()
                             : "N/A"}
                     </p>
-                    <p className="text-xs text-purple-600 mt-1">
+                    <p className="text-xs text-purple-600">
                         {Math.round(
                             monthlyData?.peakDay?.utilizationPercentage || 0,
                         )}
@@ -379,26 +379,26 @@ export default function MonthlyUtilizationChart() {
                     </p>
                 </div>
 
-                <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
-                    <h4 className="text-sm font-medium text-orange-700">
-                        Business Days
+                <div className="bg-orange-50 p-3 rounded-lg border border-orange-100">
+                    <h4 className="text-xs font-medium text-orange-700">
+                        Peak Day
                     </h4>
-                    <p className="text-2xl font-bold text-orange-900">
+                    <p className="text-lg font-bold text-orange-900">
                         {monthlyData?.businessDaysCount || 0}
                     </p>
-                    <p className="text-xs text-orange-600 mt-1">
+                    <p className="text-xs text-orange-600">
                         Days with activity
                     </p>
                 </div>
             </div>
 
             {/* Monthly Trend Chart */}
-            <div className="mb-6">
-                <h4 className="text-md font-medium text-gray-700 mb-3">
+            <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">
                     Daily Utilization for {getMonthName(selectedMonth)}{" "}
                     {selectedYear}
                 </h4>
-                <ResponsiveContainer width="100%" height={350}>
+                <ResponsiveContainer width="100%" height={280}>
                     {renderChart()}
                 </ResponsiveContainer>
             </div>

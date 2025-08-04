@@ -132,26 +132,26 @@ export default function DailyUtilizationChart() {
                 </div>
             </div>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                    <h4 className="text-sm font-medium text-blue-700">
-                        Total Utilization
+            {/* Compact Summary Cards */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                    <h4 className="text-xs font-medium text-blue-700">
+                        Utilization
                     </h4>
-                    <p className="text-2xl font-bold text-blue-900">
+                    <p className="text-xl font-bold text-blue-900">
                         {dailyData?.utilizationPercentage || 0}%
                     </p>
-                    <p className="text-xs text-blue-600 mt-1">
+                    <p className="text-xs text-blue-600">
                         {dailyData?.utilizationHours || 0}h{" "}
-                        {dailyData?.utilizationMinutesRemainder || 0}m used
+                        {dailyData?.utilizationMinutesRemainder || 0}m
                     </p>
                 </div>
 
-                <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
-                    <h4 className="text-sm font-medium text-purple-700">
+                <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
+                    <h4 className="text-xs font-medium text-purple-700">
                         Date
                     </h4>
-                    <p className="text-lg font-bold text-purple-900">
+                    <p className="text-sm font-bold text-purple-900">
                         {parseDisplayDate(selectedDate).toLocaleDateString(
                             "en-US",
                             {
@@ -161,20 +161,20 @@ export default function DailyUtilizationChart() {
                             },
                         )}
                     </p>
-                    <p className="text-xs text-purple-600 mt-1">
+                    <p className="text-xs text-purple-600">
                         {selectedDate === new Date().toISOString().split("T")[0]
                             ? "Today"
-                            : "Historical data"}
+                            : "Historical"}
                     </p>
                 </div>
             </div>
 
             {/* Hourly Utilization Chart */}
-            <div className="mb-6">
-                <h4 className="text-md font-medium text-gray-700 mb-3">
+            <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">
                     Hourly Utilization Pattern
                 </h4>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={220}>
                     <LineChart
                         data={hourlyData}
                         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
@@ -202,10 +202,10 @@ export default function DailyUtilizationChart() {
 
             {/* Active Users Chart */}
             <div>
-                <h4 className="text-md font-medium text-gray-700 mb-3">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">
                     Active Users Throughout the Day
                 </h4>
-                <ResponsiveContainer width="100%" height={200}>
+                <ResponsiveContainer width="100%" height={160}>
                     <BarChart
                         data={hourlyData}
                         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
