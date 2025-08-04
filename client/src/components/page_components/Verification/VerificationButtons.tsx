@@ -192,7 +192,7 @@ export default function VerificationButtons() {
             <img
                 src="/logo_holder.png"
                 alt="LAB-Control Logo"
-                className="h-16 sm:h-20 w-auto mb-4 sm:mb-6"
+                className="h-24 sm:h-48 w-auto mb-4 sm:mb-6"
             />
 
             {/* Test Environment Toggle */}
@@ -311,7 +311,7 @@ export default function VerificationButtons() {
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     strokeWidth={2}
-                                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                 />
                             </svg>
                             Record Departure
