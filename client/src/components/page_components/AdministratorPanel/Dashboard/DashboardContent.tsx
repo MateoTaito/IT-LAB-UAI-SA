@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { listUsers } from "../../../../api/UsersApi";
 import {
     listActiveUsers,
@@ -19,12 +19,12 @@ export default function DashboardContent() {
         null,
     );
     const [loading, setLoading] = useState(true);
+    const [autoRefresh, setAutoRefresh] = useState(true);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+    const intervalRef = useRef<number | null>(null);
 
-    useEffect(() => {
-        fetchDashboardData();
-    }, []);
-
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = useCallback(async () => {
         try {
             const [users, activeUsers, utilization] = await Promise.all([
                 listUsers(),
@@ -35,24 +35,123 @@ export default function DashboardContent() {
             setTotalUsers(users.length);
             setActiveSessions(activeUsers.length);
             setLabUtilization(utilization);
+            setLastRefresh(new Date());
+
+            // Trigger refresh for child components
+            setRefreshTrigger((prev) => prev + 1);
         } catch (error) {
             console.error("Error fetching dashboard data:", error);
         } finally {
             setLoading(false);
         }
+    }, []);
+
+    // Initial data fetch
+    useEffect(() => {
+        fetchDashboardData();
+    }, [fetchDashboardData]);
+
+    // Auto-refresh functionality
+    useEffect(() => {
+        if (autoRefresh) {
+            intervalRef.current = setInterval(() => {
+                fetchDashboardData();
+            }, 60000); // 60 seconds
+
+            return () => {
+                if (intervalRef.current) {
+                    clearInterval(intervalRef.current);
+                }
+            };
+        } else {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+        }
+    }, [autoRefresh, fetchDashboardData]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, []);
+
+    const handleManualRefresh = () => {
+        fetchDashboardData();
+    };
+
+    const handleToggleAutoRefresh = () => {
+        setAutoRefresh((prev) => !prev);
     };
 
     return (
         <div className="space-y-6">
             <div className="bg-white p-6 rounded-lg shadow">
-                <h2 className="text-xl font-semibold mb-4 text-gray-800">
-                    {new Date().toLocaleDateString("es-ES", {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                    })}
-                </h2>
+                {/* Header with refresh controls */}
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold text-gray-800">
+                        {new Date().toLocaleDateString("es-ES", {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                        })}
+                    </h2>
+
+                    <div className="flex items-center space-x-3">
+                        {/* Auto-refresh toggle */}
+                        <div className="flex items-center space-x-2">
+                            <span className="text-sm text-gray-600">
+                                Auto-refresh:
+                            </span>
+                            <button
+                                onClick={handleToggleAutoRefresh}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                    autoRefresh ? "bg-blue-600" : "bg-gray-200"
+                                }`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                        autoRefresh
+                                            ? "translate-x-6"
+                                            : "translate-x-1"
+                                    }`}
+                                />
+                            </button>
+                        </div>
+
+                        {/* Manual refresh button */}
+                        <button
+                            onClick={handleManualRefresh}
+                            disabled={loading}
+                            className="flex items-center space-x-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <svg
+                                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                />
+                            </svg>
+                            <span>Refresh</span>
+                        </button>
+
+                        {/* Last refresh indicator */}
+                        <div className="text-xs text-gray-500">
+                            Last updated: {lastRefresh.toLocaleTimeString()}
+                        </div>
+                    </div>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
@@ -134,9 +233,14 @@ export default function DashboardContent() {
                         System Status
                     </h3>
                     <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <div
+                            className={`w-3 h-3 rounded-full ${autoRefresh ? "bg-green-500" : "bg-yellow-500"}`}
+                        ></div>
                         <span className="text-gray-600">
-                            All systems operational
+                            {autoRefresh
+                                ? "Auto-refresh enabled"
+                                : "Auto-refresh disabled"}{" "}
+                            - All systems operational
                         </span>
                     </div>
                 </div>
@@ -146,26 +250,26 @@ export default function DashboardContent() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left Column - Daily Chart (spans 2 columns) */}
                 <div className="lg:col-span-2">
-                    <DailyUtilizationChart />
+                    <DailyUtilizationChart refreshTrigger={refreshTrigger} />
                 </div>
 
                 {/* Right Column - Active Users Table */}
                 <div className="lg:col-span-1">
-                    <ActiveUsersTable />
+                    <ActiveUsersTable refreshTrigger={refreshTrigger} />
                 </div>
             </div>
 
             {/* Secondary Content Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {/* Monthly Chart - Reduced priority */}
-                <MonthlyUtilizationChart />
+                <MonthlyUtilizationChart refreshTrigger={refreshTrigger} />
 
                 {/* Top Users - Better positioned */}
-                <TopUsersTable />
+                <TopUsersTable refreshTrigger={refreshTrigger} />
             </div>
 
             {/* Recent Activity - Full width for detailed view */}
-            <RecentActivityTable />
+            <RecentActivityTable refreshTrigger={refreshTrigger} />
 
             {/* Historical Metrics */}
             {/* <HistoricalMetrics /> */}

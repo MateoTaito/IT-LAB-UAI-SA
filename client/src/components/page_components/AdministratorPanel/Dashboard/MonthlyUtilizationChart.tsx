@@ -31,7 +31,13 @@ interface MonthlyChartData {
     date: string;
 }
 
-export default function MonthlyUtilizationChart() {
+interface MonthlyUtilizationChartProps {
+    refreshTrigger?: number;
+}
+
+export default function MonthlyUtilizationChart({
+    refreshTrigger,
+}: MonthlyUtilizationChartProps) {
     const [monthlyData, setMonthlyData] = useState<MonthlyUtilization | null>(
         null,
     );
@@ -49,6 +55,13 @@ export default function MonthlyUtilizationChart() {
     useEffect(() => {
         fetchMonthlyData();
     }, [selectedMonth, selectedYear]);
+
+    // Auto-refresh when trigger changes
+    useEffect(() => {
+        if (refreshTrigger && refreshTrigger > 0) {
+            fetchMonthlyData();
+        }
+    }, [refreshTrigger]);
 
     const fetchMonthlyData = async () => {
         try {

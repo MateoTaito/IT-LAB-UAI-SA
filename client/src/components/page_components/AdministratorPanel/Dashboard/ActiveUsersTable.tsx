@@ -1,21 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { listActiveUsers, ActiveUser } from "../../../../api/AttendanceApi";
 
-export default function ActiveUsersTable() {
+interface ActiveUsersTableProps {
+    refreshTrigger?: number;
+}
+
+export default function ActiveUsersTable({
+    refreshTrigger,
+}: ActiveUsersTableProps) {
     const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Fetch active users when component mounts and every 30 seconds
     useEffect(() => {
         fetchActiveUsers();
-
-        // Set up auto-refresh every 30 seconds
-        const interval = setInterval(fetchActiveUsers, 30000);
-
-        // Cleanup interval on unmount
-        return () => clearInterval(interval);
     }, []);
+
+    // Auto-refresh when trigger changes
+    useEffect(() => {
+        if (refreshTrigger && refreshTrigger > 0) {
+            fetchActiveUsers();
+        }
+    }, [refreshTrigger]);
 
     const fetchActiveUsers = async () => {
         try {

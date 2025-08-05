@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { getTopUsers, TopUser } from "../../../../api/AttendanceApi";
 
-export default function TopUsersTable() {
+interface TopUsersTableProps {
+    refreshTrigger?: number;
+}
+
+export default function TopUsersTable({ refreshTrigger }: TopUsersTableProps) {
     const [topUsers, setTopUsers] = useState<TopUser[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchTopUsers();
     }, []);
+
+    // Auto-refresh when trigger changes
+    useEffect(() => {
+        if (refreshTrigger && refreshTrigger > 0) {
+            fetchTopUsers();
+        }
+    }, [refreshTrigger]);
 
     const fetchTopUsers = async () => {
         try {

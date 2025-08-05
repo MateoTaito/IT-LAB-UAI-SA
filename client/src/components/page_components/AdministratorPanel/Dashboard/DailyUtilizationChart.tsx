@@ -26,7 +26,13 @@ const parseDisplayDate = (dateString: string): Date => {
 // Use the HourlyUtilization interface from the API
 type HourlyData = HourlyUtilization;
 
-export default function DailyUtilizationChart() {
+interface DailyUtilizationChartProps {
+    refreshTrigger?: number;
+}
+
+export default function DailyUtilizationChart({
+    refreshTrigger,
+}: DailyUtilizationChartProps) {
     const [dailyData, setDailyData] = useState<LabUtilization | null>(null);
     const [hourlyData, setHourlyData] = useState<HourlyData[]>([]);
     const [loading, setLoading] = useState(true);
@@ -38,6 +44,13 @@ export default function DailyUtilizationChart() {
     useEffect(() => {
         fetchDailyData();
     }, [selectedDate]);
+
+    // Auto-refresh when trigger changes
+    useEffect(() => {
+        if (refreshTrigger && refreshTrigger > 0) {
+            fetchDailyData();
+        }
+    }, [refreshTrigger]);
 
     const fetchDailyData = async () => {
         try {
