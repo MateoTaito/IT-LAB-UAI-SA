@@ -11,6 +11,7 @@ import TopUsersTable from "./TopUsersTable";
 import HistoricalMetrics from "./HistoricalMetrics";
 import DailyUtilizationChart from "./DailyUtilizationChart";
 import MonthlyUtilizationChart from "./MonthlyUtilizationChart";
+import MonthlyHourlyUtilizationChart from "./MonthlyHourlyUtilizationChart";
 
 export default function DashboardContent() {
     const [totalUsers, setTotalUsers] = useState<number>(0);
@@ -267,6 +268,9 @@ export default function DashboardContent() {
                 {/* Top Users - Better positioned */}
                 <TopUsersTable refreshTrigger={refreshTrigger} />
             </div>
+
+            {/* Monthly Hourly Averages Chart - Full width for detailed view */}
+            <MonthlyHourlyUtilizationChart refreshTrigger={refreshTrigger} />
 
             {/* Recent Activity - Full width for detailed view */}
             <RecentActivityTable refreshTrigger={refreshTrigger} />
