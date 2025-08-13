@@ -1,8 +1,14 @@
 import axios from "axios";
-import { API_BASE_URL } from '../config/api';
+import { getSelectedInstanceApiUrl } from "../config/selectedInstanceApi";
 
 const API_Admin = axios.create({
-	baseURL: `${API_BASE_URL}/admins`,
+    baseURL: `${getSelectedInstanceApiUrl()}/admins`,
 });
 
-export default API_Admin
+// Add interceptor to update baseURL dynamically
+API_Admin.interceptors.request.use((config) => {
+    config.baseURL = `${getSelectedInstanceApiUrl()}/admins`;
+    return config;
+});
+
+export default API_Admin;

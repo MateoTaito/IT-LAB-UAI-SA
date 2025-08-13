@@ -15,9 +15,13 @@ export const createCareer = async (req: Request, res: Response) => {
         const careerData: CreateCareerDTO = req.body;
 
         // Check if career with the same name already exists
-        const existingCareer = await Career.findOne({ where: { Name: careerData.Name } });
+        const existingCareer = await Career.findOne({
+            where: { Name: careerData.Name },
+        });
         if (existingCareer) {
-            return res.status(409).json({ error: "Career with this name already exists" });
+            return res
+                .status(409)
+                .json({ error: "Career with this name already exists" });
         }
 
         const newCareer = await Career.create({
@@ -27,7 +31,10 @@ export const createCareer = async (req: Request, res: Response) => {
 
         res.status(201).json(newCareer);
     } catch (error) {
-        res.status(400).json({ error: "Failed to create career", details: error });
+        res.status(400).json({
+            error: "Failed to create career",
+            details: error,
+        });
     }
 };
 
@@ -36,7 +43,10 @@ export const listCareers = async (req: Request, res: Response) => {
         const careers = await Career.findAll();
         res.status(200).json(careers);
     } catch (error) {
-        res.status(500).json({ error: "Failed to fetch careers", details: error });
+        res.status(500).json({
+            error: "Failed to fetch careers",
+            details: error,
+        });
     }
 };
 
@@ -47,7 +57,9 @@ export const deleteCareerByName = async (req: Request, res: Response) => {
             return res.status(400).json({ error: "Career Name is required" });
         }
 
-        const career = await Career.findOne({ where: { Name: careerData.Name } });
+        const career = await Career.findOne({
+            where: { Name: careerData.Name },
+        });
         if (!career) {
             return res.status(404).json({ error: "Career not found" });
         }
@@ -55,6 +67,9 @@ export const deleteCareerByName = async (req: Request, res: Response) => {
         await career.destroy();
         res.status(200).json({ message: "Career deleted successfully" });
     } catch (error) {
-        res.status(500).json({ error: "Failed to delete career", details: error });
+        res.status(500).json({
+            error: "Failed to delete career",
+            details: error,
+        });
     }
 };

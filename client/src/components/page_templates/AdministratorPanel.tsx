@@ -14,70 +14,72 @@ import ReasonsManagement from "../page_components/AdministratorPanel/Reasons/Rea
 import AdminsManagement from "../page_components/AdministratorPanel/Admins/AdminsManagement";
 
 export default function AdministratorPanel() {
-	const { isAuthenticated, adminId, userId } = useAuth();
-	const { collapsed } = useSidebar();
-	const navigate = useNavigate();
-	const location = useLocation();
-	const [userInfo, setUserInfo] = useState<User | null>(null);
-	const [loading, setLoading] = useState<boolean>(true);
-	const [error, setError] = useState<string | null>(null);
+    const { isAuthenticated, adminId, userId } = useAuth();
+    const { collapsed } = useSidebar();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [userInfo, setUserInfo] = useState<User | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
-	// If not authenticated, redirect to login
-	useEffect(() => {
-		if (!isAuthenticated) {
-			navigate("/login");
-			return;
-		}
+    // If not authenticated, redirect to login
+    useEffect(() => {
+        if (!isAuthenticated) {
+            navigate("/login");
+            return;
+        }
 
-		// Fetch user information
-		const fetchUserInfo = async () => {
-			try {
-				if (userId) {
-					const userData = await getAdminInfo(userId);
-					setUserInfo(userData);
-				}
-			} catch (err) {
-				setError("Failed to load user information");
-				console.error(err);
-			} finally {
-				setLoading(false);
-			}
-		};
+        // Fetch user information
+        const fetchUserInfo = async () => {
+            try {
+                if (userId) {
+                    const userData = await getAdminInfo(userId);
+                    setUserInfo(userData);
+                }
+            } catch (err) {
+                setError("Failed to load user information");
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-		fetchUserInfo();
-	}, [isAuthenticated, userId, navigate]);
+        fetchUserInfo();
+    }, [isAuthenticated, userId, navigate]);
 
-	// Display loading state while fetching user info
-	if (loading) {
-		return (
-			<div className="min-h-screen bg-gray-100 flex items-center justify-center">
-				<div className="text-center">
-					<div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent"></div>
-					<p className="mt-2 text-gray-700">Loading...</p>
-				</div>
-			</div>
-		);
-	}
+    // Display loading state while fetching user info
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent"></div>
+                    <p className="mt-2 text-gray-700">Loading...</p>
+                </div>
+            </div>
+        );
+    }
 
-	// Display error if something went wrong
-	if (error) {
-		return (
-			<div className="min-h-screen bg-gray-100 flex items-center justify-center">
-				<div className="text-center text-red-600">
-					<p>{error}</p>
-					<button
-						className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-						onClick={() => navigate("/login")}
-					>
-						Return to Login
-					</button>
-				</div>
-			</div>
-		);
-	}
+    // Display error if something went wrong
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+                <div className="text-center text-red-600">
+                    <p>{error}</p>
+                    <button
+                        className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                        onClick={() => navigate("/login")}
+                    >
+                        Return to Login
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
-	const fullName = userInfo ? `${userInfo.Name} ${userInfo.LastName}` : "Administrator";
-	const email = userInfo ? userInfo.Email : "";
+    const fullName = userInfo
+        ? `${userInfo.Name} ${userInfo.LastName}`
+        : "Administrator";
+    const email = userInfo ? userInfo.Email : "";
 
 	return (
 		<div className="flex h-screen bg-gray-100">

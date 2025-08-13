@@ -5,6 +5,8 @@ import {
     getLabUtilization,
     LabUtilization,
 } from "../../../../api/AttendanceApi";
+import { listInstances, Instance } from "../../../../api/InstanceApi";
+import { updateSelectedInstancePort } from "../../../../config/selectedInstanceApi";
 import ActiveUsersTable from "./ActiveUsersTable";
 import RecentActivityTable from "./RecentActivityTable";
 import TopUsersTable from "./TopUsersTable";
@@ -19,6 +21,10 @@ export default function DashboardContent() {
     const [labUtilization, setLabUtilization] = useState<LabUtilization | null>(
         null,
     );
+    const [instances, setInstances] = useState<Instance[]>([]);
+    const [selectedInstance, setSelectedInstance] = useState<Instance | null>(
+        null,
+    );
     const [loading, setLoading] = useState(true);
     const [autoRefresh, setAutoRefresh] = useState(true);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -27,15 +33,19 @@ export default function DashboardContent() {
 
     const fetchDashboardData = useCallback(async () => {
         try {
-            const [users, activeUsers, utilization] = await Promise.all([
-                listUsers(),
-                listActiveUsers(),
-                getLabUtilization(),
-            ]);
+            const [users, activeUsers, utilization, instancesData] =
+                await Promise.all([
+                    listUsers(),
+                    listActiveUsers(),
+                    getLabUtilization(),
+                    listInstances(),
+                ]);
 
             setTotalUsers(users.length);
             setActiveSessions(activeUsers.length);
             setLabUtilization(utilization);
+            setInstances(instancesData);
+
             setLastRefresh(new Date());
 
             // Trigger refresh for child components
@@ -45,7 +55,7 @@ export default function DashboardContent() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [selectedInstance]);
 
     // Initial data fetch
     useEffect(() => {
@@ -94,14 +104,49 @@ export default function DashboardContent() {
             <div className="bg-white p-6 rounded-lg shadow">
                 {/* Header with refresh controls */}
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold text-gray-800">
-                        {new Date().toLocaleDateString("es-ES", {
-                            weekday: "long",
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                        })}
-                    </h2>
+                    <div className="flex items-center space-x-4">
+                        <h2 className="text-xl font-semibold text-gray-800">
+                            {new Date().toLocaleDateString("es-ES", {
+                                weekday: "long",
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                            })}
+                        </h2>
+
+                        {/* Instance Dropdown */}
+                        <div className="flex items-center space-x-2">
+                            <span className="text-sm text-gray-600">
+                                Instance:
+                            </span>
+                            <select
+                                value={selectedInstance?.Id || ""}
+                                onChange={(e) => {
+                                    const instanceId = parseInt(e.target.value);
+                                    const instance = instances.find(
+                                        (inst) => inst.Id === instanceId,
+                                    );
+                                    setSelectedInstance(instance || null);
+                                    // Update the selected instance port in configuration
+                                    updateSelectedInstancePort(
+                                        instance?.Port || null,
+                                    );
+                                }}
+                                className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="">Select Instance</option>
+                                {instances.map((instance) => (
+                                    <option
+                                        key={instance.Id}
+                                        value={instance.Id}
+                                    >
+                                        {instance.Name} ({instance.InstanceId})
+                                        ({instance.Port})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
 
                     <div className="flex items-center space-x-3">
                         {/* Auto-refresh toggle */}
@@ -159,44 +204,44 @@ export default function DashboardContent() {
                         <h3 className="text-lg font-medium text-indigo-700">
                             Total Users
                         </h3>
-                        <p className="text-3xl font-bold text-indigo-900">
+                        <div className="text-3xl font-bold text-indigo-900">
                             {loading ? (
                                 <div className="animate-pulse bg-indigo-200 h-8 w-8 rounded"></div>
                             ) : (
                                 totalUsers
                             )}
-                        </p>
+                        </div>
                     </div>
 
                     <div className="bg-green-50 p-4 rounded-lg border border-green-100">
                         <h3 className="text-lg font-medium text-green-700">
                             Active Sessions
                         </h3>
-                        <p className="text-3xl font-bold text-green-900">
+                        <div className="text-3xl font-bold text-green-900">
                             {loading ? (
                                 <div className="animate-pulse bg-green-200 h-8 w-8 rounded"></div>
                             ) : (
                                 activeSessions
                             )}
-                        </p>
+                        </div>
                     </div>
 
                     <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
                         <h3 className="text-lg font-medium text-purple-700">
                             Lab Utilization
                         </h3>
-                        <p className="text-3xl font-bold text-purple-900">
+                        <div className="text-3xl font-bold text-purple-900">
                             {loading ? (
                                 <div className="animate-pulse bg-purple-200 h-8 w-8 rounded"></div>
                             ) : (
                                 `${labUtilization?.utilizationPercentage || 0}%`
                             )}
-                        </p>
+                        </div>
                         {labUtilization && (
-                            <p className="text-sm text-purple-600 mt-1">
+                            <div className="text-sm text-purple-600 mt-1">
                                 {labUtilization.currentOccupancy}/
                                 {labUtilization.maxCapacity} ocupado
-                            </p>
+                            </div>
                         )}
                     </div>
 
@@ -204,7 +249,7 @@ export default function DashboardContent() {
                         <h3 className="text-lg font-medium text-orange-700">
                             Usage Time
                         </h3>
-                        <p className="text-3xl font-bold text-orange-900">
+                        <div className="text-3xl font-bold text-orange-900">
                             {loading ? (
                                 <div className="animate-pulse bg-orange-200 h-8 w-8 rounded"></div>
                             ) : labUtilization ? (
@@ -216,15 +261,15 @@ export default function DashboardContent() {
                             ) : (
                                 "0m"
                             )}
-                        </p>
+                        </div>
                         {labUtilization && (
-                            <p className="text-sm text-orange-600 mt-1">
+                            <div className="text-sm text-orange-600 mt-1">
                                 de{" "}
                                 {Math.floor(
                                     labUtilization.maxPossibleMinutes / 60,
                                 )}
                                 h posibles
-                            </p>
+                            </div>
                         )}
                     </div>
                 </div>

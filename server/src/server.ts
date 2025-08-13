@@ -7,22 +7,23 @@ import rolesRouter from "./routes/Roles.routes";
 import careersRouter from "./routes/Careers.routes";
 import reasonsRouter from "./routes/Reasons.routes";
 import attendanceRoutes from "./routes/Attendance.routes";
+import instanceRoutes from "./routes/Instance.routes";
 import { startAttendanceAutoCheckout } from "./scheduler/attendanceAutoCheckout";
 import { seedDefaultAdmin, seedDefaultReasons } from "./utils/dbSeeder.util";
 
 // Define Conection to the Data Base
 async function connectDB() {
-	try {
-		await db.authenticate();
-		await db.sync();
+    try {
+        await db.authenticate();
+        await db.sync();
 
-		// Seed default admin and reasons after DB sync
-		await seedDefaultAdmin();
-		await seedDefaultReasons();
-		console.log("Database connected and initialized successfully");
-	} catch (error) {
-		console.log("Error while Trying to Connect to the Database", error);
-	}
+        // Seed default admin and reasons after DB sync
+        await seedDefaultAdmin();
+        await seedDefaultReasons();
+        console.log("Database connected and initialized successfully");
+    } catch (error) {
+        console.log("Error while Trying to Connect to the Database", error);
+    }
 }
 
 // Establishing Conection
@@ -43,5 +44,6 @@ server.use("/api/roles", rolesRouter);
 server.use("/api/careers", careersRouter);
 server.use("/api/reasons", reasonsRouter);
 server.use("/api/attendance", attendanceRoutes);
+server.use("/api/instance", instanceRoutes);
 
 export default server;
