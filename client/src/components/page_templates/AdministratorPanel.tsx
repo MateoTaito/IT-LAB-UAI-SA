@@ -12,6 +12,7 @@ import UsersManagement from "../page_components/AdministratorPanel/Users/UsersMa
 import RolesManagement from "../page_components/AdministratorPanel/Roles/RolesManagement";
 import ReasonsManagement from "../page_components/AdministratorPanel/Reasons/ReasonsManagement";
 import AdminsManagement from "../page_components/AdministratorPanel/Admins/AdminsManagement";
+import ConfigManagement from "../page_components/AdministratorPanel/Config/ConfigManagement";
 
 export default function AdministratorPanel() {
     const { isAuthenticated, adminId, userId } = useAuth();
@@ -81,30 +82,48 @@ export default function AdministratorPanel() {
         : "Administrator";
     const email = userInfo ? userInfo.Email : "";
 
-	return (
-		<div className="flex h-screen bg-gray-100">
-			{/* Sidebar with user info passed in */}
-			<Sidebar userName={fullName} userEmail={email} />
+    return (
+        <div className="flex h-screen bg-gray-100">
+            {/* Sidebar with user info passed in */}
+            <Sidebar userName={fullName} userEmail={email} />
 
-			{/* Main Content */}
-			<div className={`flex-1 flex flex-col ${collapsed ? "ml-24" : "ml-64"} transition-all duration-300`}>
-				{/* Admin Header */}
-				<Header />
+            {/* Main Content */}
+            <div
+                className={`flex-1 flex flex-col ${collapsed ? "ml-24" : "ml-64"} transition-all duration-300`}
+            >
+                {/* Admin Header */}
+                <Header />
 
-				{/* Page Content - Now uses Routes */}
-				<main className="flex-1 overflow-y-auto p-6">
-					<div className="max-w-7xl mx-auto">
-						<Routes>
-							<Route path="/" element={<DashboardContent />} />
-							<Route path="/admins" element={<AdminsManagement />} />
-							<Route path="/users" element={<UsersManagement />} />
-							<Route path="/roles" element={<RolesManagement />} />
-							<Route path="/reasons" element={<ReasonsManagement />} />
-							<Route path="*" element={<DashboardContent />} />
-						</Routes>
-					</div>
-				</main>
-			</div>
-		</div>
-	);
+                {/* Page Content - Now uses Routes */}
+                <main className="flex-1 overflow-y-auto p-6">
+                    <div className="max-w-7xl mx-auto">
+                        <Routes>
+                            <Route path="/" element={<DashboardContent />} />
+                            <Route
+                                path="/admins"
+                                element={<AdminsManagement />}
+                            />
+                            <Route
+                                path="/users"
+                                element={<UsersManagement />}
+                            />
+                            <Route
+                                path="/roles"
+                                element={<RolesManagement />}
+                            />
+                            <Route
+                                path="/reasons"
+                                element={<ReasonsManagement />}
+                            />
+                            <Route
+                                path="/config"
+                                element={<ConfigManagement />}
+                            />
+                            <Route path="*" element={<DashboardContent />} />
+                        </Routes>
+                    </div>
+                </main>
+            </div>
+        </div>
+    );
 }

@@ -10,7 +10,7 @@ export const getApiBaseUrl = (): string => {
         window.location.hostname === "localhost" ||
         window.location.hostname === "127.0.0.1"
     ) {
-        return "http://localhost:3001/api";
+        return "http://localhost:3002/api";
     }
 
     // If we're on an external device, use the server's network IP
