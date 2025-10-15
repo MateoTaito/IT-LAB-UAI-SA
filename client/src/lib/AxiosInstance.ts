@@ -1,8 +1,11 @@
 import axios from "axios";
-import { API_BASE_URL } from "../config/api";
+const currentHost = window.location.hostname;
+const baseHost = currentHost.replace(/:\d+$/, "");
+
+const envApiUrl = `http://${baseHost}/sa_api`;
 
 const API_Instances = axios.create({
-    baseURL: `http://192.168.2.2:3002/api/instance`,
+  baseURL: `${envApiUrl}/instance`,
 });
 
 export default API_Instances;
