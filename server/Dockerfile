@@ -10,6 +10,9 @@ RUN npx tsc
 # Runtime: solo prod deps + dist
 FROM node:20-bookworm
 WORKDIR /app
+ENV TZ=America/Santiago
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm ci --omit=dev
